@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/fab/discovery"
+	clientmocks "github.com/hyperledger/fabric-sdk-go/pkg/client/common/mocks"
 	contextAPI "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	pfab "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	discmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/discovery/mocks"
@@ -28,7 +28,6 @@ const (
 	mspID2 = "Org2MSP"
 
 	peer1MSP1 = "peer1.org1.com:9999"
-	peer1MSP2 = "peer1.org2.com:9999"
 )
 
 func TestLocalProvider(t *testing.T) {
@@ -47,14 +46,14 @@ func TestLocalProvider(t *testing.T) {
 	}
 	config.SetCustomNetworkPeerCfg([]pfab.NetworkPeer{peer1Org1, peer1Org2})
 
-	discClient := discovery.NewMockDiscoveryClient()
+	discClient := clientmocks.NewMockDiscoveryClient()
 	discClient.SetResponses(
-		&discovery.MockDiscoverEndpointResponse{
+		&clientmocks.MockDiscoverEndpointResponse{
 			PeerEndpoints: []*discmocks.MockDiscoveryPeerEndpoint{},
 		},
 	)
 
-	SetClientProvider(func(ctx contextAPI.Client) (discovery.Client, error) {
+	SetClientProvider(func(ctx contextAPI.Client) (DiscoveryClient, error) {
 		return discClient, nil
 	})
 

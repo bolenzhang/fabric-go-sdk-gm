@@ -9,7 +9,6 @@ package mocks
 import (
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -99,11 +98,10 @@ type MockConnection struct {
 
 // Opts contains mock connection options
 type Opts struct {
-	Ledger        servicemocks.Ledger
-	Operations    OperationMap
-	Factory       ConnectionFactory
-	SourceURL     string
-	ResponseDelay time.Duration
+	Ledger     servicemocks.Ledger
+	Operations OperationMap
+	Factory    ConnectionFactory
+	SourceURL  string
 }
 
 // NewMockConnection returns a new MockConnection using the given options
@@ -319,12 +317,5 @@ func WithResults(funcResults ...*OperationResult) Opt {
 		for _, fr := range funcResults {
 			opts.Operations[fr.Operation] = ResultDesc{Result: fr.Result, ErrMsg: fr.ErrMessage}
 		}
-	}
-}
-
-// WithResponseDelay sets the amount of time to wait before returning a response
-func WithResponseDelay(delay time.Duration) Opt {
-	return func(opts *Opts) {
-		opts.ResponseDelay = delay
 	}
 }

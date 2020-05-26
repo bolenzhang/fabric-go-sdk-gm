@@ -7,8 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package fab
 
 import (
-	"crypto/tls"
-	"crypto/x509"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
+	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -144,7 +144,7 @@ func ConfigFromBackend(coreBackend ...core.ConfigBackend) (fab.EndpointConfig, e
 type EndpointConfig struct {
 	backend                  *lookup.ConfigLookup
 	networkConfig            *fab.NetworkConfig
-	tlsCertPool              commtls.CertPool
+	tlsCertPool              fab.CertPool
 	entityMatchers           *entityMatchers
 	peerConfigsByOrg         map[string][]fab.PeerConfig
 	networkPeers             []fab.NetworkPeer
@@ -286,7 +286,7 @@ func (c *EndpointConfig) ChannelOrderers(name string) []fab.OrdererConfig {
 
 // TLSCACertPool returns the configured cert pool. If a certConfig
 // is provided, the certificate is added to the pool
-func (c *EndpointConfig) TLSCACertPool() commtls.CertPool {
+func (c *EndpointConfig) TLSCACertPool() fab.CertPool {
 	return c.tlsCertPool
 }
 

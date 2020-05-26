@@ -7,8 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package membership
 
 import (
-	"crypto/x509"
 	"encoding/pem"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 
 	"strings"
 

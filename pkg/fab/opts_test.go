@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
 )
 
 var (
@@ -285,7 +284,7 @@ func (m *mockChannelOrderers) ChannelOrderers(name string) []fab.OrdererConfig {
 
 type mockTLSCACertPool struct{}
 
-func (m *mockTLSCACertPool) TLSCACertPool() commtls.CertPool {
+func (m *mockTLSCACertPool) TLSCACertPool() fab.CertPool {
 	return nil
 }
 

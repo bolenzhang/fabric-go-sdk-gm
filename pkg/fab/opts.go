@@ -7,13 +7,12 @@ SPDX-License-Identifier: Apache-2.0
 package fab
 
 import (
-	"crypto/tls"
+	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
 )
 
 // EndpointConfigOptions represents EndpointConfig interface with overridable interface functions
@@ -90,7 +89,7 @@ type channelOrderers interface {
 
 // tlsCACertPool interface allows to uniquely override EndpointConfig interface's TLSCACertPool() function
 type tlsCACertPool interface {
-	TLSCACertPool() commtls.CertPool
+	TLSCACertPool() fab.CertPool
 }
 
 // tlsClientCerts interface allows to uniquely override EndpointConfig interface's TLSClientCerts() function

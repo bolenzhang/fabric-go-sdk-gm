@@ -155,7 +155,7 @@ type IdentityRequest struct {
 	// The enrollment ID which uniquely identifies an identity (required)
 	ID string
 
-	// The identity's affiliation
+	// The identity's affiliation (required)
 	Affiliation string
 
 	// Array of attributes to assign to the user

@@ -627,12 +627,6 @@ func createFabricCAClient(caID string, cryptoSuite core.CryptoSuite, config msp.
 		return nil, errors.Errorf("CA '%s' has no corresponding client keys in the configs", caID)
 	}
 
-	var err error
-	c.Config.TLS.TlsCertPool, err = config.TLSCACertPool().Get()
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't load configured cert pool")
-	}
-
 	//TLS flag enabled/disabled
 	c.Config.TLS.Enabled = endpoint.IsTLSEnabled(conf.URL)
 	c.Config.MSPDir = config.CAKeyStorePath()
@@ -640,7 +634,7 @@ func createFabricCAClient(caID string, cryptoSuite core.CryptoSuite, config msp.
 	//Factory opts
 	c.Config.CSP = cryptoSuite
 
-	err = c.Init()
+	err := c.Init()
 	if err != nil {
 		return nil, errors.Wrap(err, "CA Client init failed")
 	}

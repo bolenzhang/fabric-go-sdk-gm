@@ -8,10 +8,10 @@ package cryptoutil
 
 import (
 	"crypto"
-	"crypto/ecdsa"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/pem"
+	ecdsa "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
+	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 	"io"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"

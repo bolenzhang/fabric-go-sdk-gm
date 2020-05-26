@@ -18,7 +18,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/test"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	credentials "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls/gmcredentials"
+
 )
 
 // MockEndorserServer mock endoreser server to process endorsement proposals

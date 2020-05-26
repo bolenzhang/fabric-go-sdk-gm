@@ -8,13 +8,13 @@ package fab
 
 import (
 	reqContext "context"
-	"crypto/tls"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
+	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
-	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/metrics"
 	"google.golang.org/grpc"
 )
@@ -101,7 +101,7 @@ type EndpointConfig interface {
 	ChannelConfig(name string) *ChannelEndpointConfig
 	ChannelPeers(name string) []ChannelPeer
 	ChannelOrderers(name string) []OrdererConfig
-	TLSCACertPool() commtls.CertPool
+	TLSCACertPool() CertPool
 	TLSClientCerts() []tls.Certificate
 	CryptoConfigPath() string
 }
@@ -155,6 +155,16 @@ type Providers interface {
 	InfraProvider() InfraProvider
 	EndpointConfig() EndpointConfig
 	MetricsProvider
+}
+
+// CertPool is a thread safe wrapper around the x509 standard library
+// cert pool implementation.
+type CertPool interface {
+	// Get returns the cert pool, optionally adding the provided certs
+	Get() (*x509.CertPool, error)
+	//Add allows adding certificates to CertPool
+	//Call Get() after Add() to get the updated certpool
+	Add(certs ...*x509.Certificate)
 }
 
 // MetricsProvider represents a provider of metrics.

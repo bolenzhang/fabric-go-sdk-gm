@@ -14,12 +14,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hyperledger/fabric-protos-go/discovery"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/multi"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/comm"
 	discmocks "github.com/hyperledger/fabric-sdk-go/pkg/fab/discovery/mocks"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fab/mocks"
 	mspmocks "github.com/hyperledger/fabric-sdk-go/pkg/msp/test/mockmsp"
+	"github.com/hyperledger/fabric-protos-go/discovery"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
@@ -55,27 +56,19 @@ func TestDiscoveryClient(t *testing.T) {
 		GRPCOptions: grpcOptions,
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	responsesCh, err := client.Send(ctx, req, target1, target2, target3)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	responses, err := client.Send(ctx, req, target1, target2, target3)
+	cancel()
 
-	var successfulResponses []Response
-	var responsesWithErr []Response
+	assert.Error(t, err)
+	errs, ok := err.(multi.Errors)
+	assert.True(t, ok)
 
-	for resp := range responsesCh {
-		if resp.Error() != nil {
-			responsesWithErr = append(responsesWithErr, resp)
-		} else {
-			successfulResponses = append(successfulResponses, resp)
-		}
-
+	if len(responses) != 1 {
+		t.Fatalf("expecting 1 response but got %d", len(responses))
 	}
 
-	//we check that only 2 responses have err
-	assert.Len(t, responsesWithErr, 2)
-	//only single successful response
-	assert.Len(t, successfulResponses, 1)
-
-	response := successfulResponses[0]
+	response := responses[0]
 	assert.Equal(t, peerAddress, response.Target())
 	locResp := response.ForLocal()
 	peers, err := locResp.Peers()
@@ -89,10 +82,8 @@ func TestDiscoveryClient(t *testing.T) {
 	assert.Equal(t, 2, len(peers))
 	t.Logf("Got success response from channel query [%s]: Num Peers: %d", response.Target(), len(peers))
 
-	responsesCh, err = client.Send(ctx, req)
-	assert.Error(t, err)
-	assert.EqualError(t, err, "no targets specified")
-
+	assert.Equal(t, 2, len(errs))
+	t.Logf("Got error responses: %s", errs)
 }
 
 var discoverServer *discmocks.MockDiscoveryServer

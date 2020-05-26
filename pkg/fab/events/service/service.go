@@ -76,7 +76,7 @@ func (s *Service) Stop() {
 		return
 	}
 
-	errch := make(chan error, 1)
+	errch := make(chan error)
 	eventch <- dispatcher.NewStopEvent(errch)
 
 	select {
@@ -97,8 +97,8 @@ func (s *Service) StopAndTransfer() (fab.EventSnapshot, error) {
 		return nil, err
 	}
 
-	snapshotch := make(chan fab.EventSnapshot, 1)
-	errch := make(chan error, 1)
+	snapshotch := make(chan fab.EventSnapshot)
+	errch := make(chan error)
 	eventch <- dispatcher.NewStopAndTransferEvent(snapshotch, errch)
 
 	select {
@@ -121,8 +121,8 @@ func (s *Service) Transfer() (fab.EventSnapshot, error) {
 		return nil, err
 	}
 
-	snapshotch := make(chan fab.EventSnapshot, 1)
-	errch := make(chan error, 1)
+	snapshotch := make(chan fab.EventSnapshot)
+	errch := make(chan error)
 	eventch <- dispatcher.NewTransferEvent(snapshotch, errch)
 
 	select {

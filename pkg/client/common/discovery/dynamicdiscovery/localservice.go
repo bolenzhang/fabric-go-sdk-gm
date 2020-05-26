@@ -7,7 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 package dynamicdiscovery
 
 import (
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/multi"
 	coptions "github.com/hyperledger/fabric-sdk-go/pkg/common/options"
 	contextAPI "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -47,10 +46,7 @@ func (s *LocalService) Close() {
 }
 
 func (s *LocalService) localContext() contextAPI.Local {
-	if ctx, ok := s.context().(contextAPI.Local); ok {
-		return ctx
-	}
-	return nil
+	return s.context().(contextAPI.Local)
 }
 
 func (s *LocalService) queryPeers() ([]fab.Peer, error) {
@@ -72,7 +68,7 @@ func (s *LocalService) doQueryPeers() ([]fab.Peer, error) {
 		return nil, errors.Errorf("the service has not been initialized")
 	}
 
-	targets, err := s.getTargets(ctx)
+	target, err := s.getTarget(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -81,45 +77,33 @@ func (s *LocalService) doQueryPeers() ([]fab.Peer, error) {
 	defer cancel()
 
 	req := fabdiscovery.NewRequest().AddLocalPeersQuery()
-	responsesCh, err := s.discoveryClient().Send(reqCtx, req, targets...)
-
+	responses, err := s.discoveryClient().Send(reqCtx, req, *target)
 	if err != nil {
 		return nil, errors.Wrap(err, "error calling discover service send")
 	}
-
-	var respErrors []error
-
-	for resp := range responsesCh {
-		endpoints, err := resp.ForLocal().Peers()
-
-		if err == nil {
-			//got successful response, cancel all outstanding requests to other targets
-			cancel()
-
-			return s.filterLocalMSP(asPeers(ctx, endpoints)), nil
-		}
-
-		respErrors = append(respErrors, newDiscoveryError(err, resp.Target()))
+	if len(responses) == 0 {
+		return nil, errors.Wrap(err, "expecting 1 response from discover service send but got none")
 	}
 
-	return nil, errors.Wrap(multi.New(respErrors...), "no successful response received from any peer")
+	response := responses[0]
+	endpoints, err := response.ForLocal().Peers()
+	if err != nil {
+		return nil, DiscoveryError(err)
+	}
+
+	return s.filterLocalMSP(asPeers(ctx, endpoints)), nil
 }
 
-func (s *LocalService) getTargets(ctx contextAPI.Client) ([]fab.PeerConfig, error) {
+func (s *LocalService) getTarget(ctx contextAPI.Client) (*fab.PeerConfig, error) {
 	peers := ctx.EndpointConfig().NetworkPeers()
 	mspID := ctx.Identifier().MSPID
-	var targets []fab.PeerConfig
 	for _, p := range peers {
 		// Need to go to a peer with the local MSPID, otherwise the request will be rejected
 		if p.MSPID == mspID {
-			targets = append(targets, p.PeerConfig)
+			return &p.PeerConfig, nil
 		}
 	}
-
-	if len(targets) == 0 {
-		return nil, errors.Errorf("no bootstrap peers configured for MSP [%s]", mspID)
-	}
-	return targets, nil
+	return nil, errors.Errorf("no bootstrap peers configured for MSP [%s]", mspID)
 }
 
 // Even though the local peer query should only return peers in the local

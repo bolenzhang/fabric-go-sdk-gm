@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package dynamicdiscovery
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -19,8 +20,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DiscoveryClient is the client to the discovery service
+type DiscoveryClient interface {
+	Send(ctx context.Context, req *fabdiscovery.Request, targets ...fab.PeerConfig) ([]fabdiscovery.Response, error)
+}
+
+const (
+	// AccessDenied indicates that the user does not have permission to perform the operation
+	AccessDenied = "access denied"
+)
+
+// DiscoveryError is an error originating at the Discovery service
+type DiscoveryError error
+
 // clientProvider is overridden by unit tests
-var clientProvider = func(ctx contextAPI.Client) (fabdiscovery.Client, error) {
+var clientProvider = func(ctx contextAPI.Client) (DiscoveryClient, error) {
 	return fabdiscovery.New(ctx)
 }
 
@@ -31,7 +45,7 @@ type service struct {
 	responseTimeout time.Duration
 	lock            sync.RWMutex
 	ctx             contextAPI.Client
-	discClient      fabdiscovery.Client
+	discClient      DiscoveryClient
 	peersRef        *lazyref.Reference
 	ErrHandler      fab.ErrorHandler
 }
@@ -116,7 +130,7 @@ func (s *service) context() contextAPI.Client {
 	return s.ctx
 }
 
-func (s *service) discoveryClient() fabdiscovery.Client {
+func (s *service) discoveryClient() DiscoveryClient {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	return s.discClient

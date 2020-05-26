@@ -9,7 +9,7 @@ package peer
 import (
 	reqContext "context"
 
-	"crypto/x509"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 
 	"github.com/spf13/cast"
 	"google.golang.org/grpc"

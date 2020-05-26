@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package mocks
 
 import (
-	"crypto/tls"
+	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 	"path/filepath"
 	"time"
 
@@ -15,12 +15,11 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config/endpoint"
 	"github.com/hyperledger/fabric-sdk-go/test/metadata"
 
-	"crypto/x509"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/test/mockfab"
-	commtls "github.com/hyperledger/fabric-sdk-go/pkg/core/config/comm/tls"
 	"github.com/pkg/errors"
 )
 
@@ -33,7 +32,7 @@ type MockConfig struct {
 	customPeerCfg          *fab.PeerConfig
 	customOrdererCfg       *fab.OrdererConfig
 	customRandomOrdererCfg *fab.OrdererConfig
-	CustomTLSCACertPool    commtls.CertPool
+	CustomTLSCACertPool    fab.CertPool
 	chConfig               map[string]*fab.ChannelEndpointConfig
 }
 
@@ -150,7 +149,7 @@ func (c *MockConfig) PeerConfig(nameOrURL string) (*fab.PeerConfig, bool) {
 }
 
 // TLSCACertPool ...
-func (c *MockConfig) TLSCACertPool() commtls.CertPool {
+func (c *MockConfig) TLSCACertPool() fab.CertPool {
 	if c.errorCase {
 		return &mockfab.MockCertPool{Err: errors.New("just to test error scenario")}
 	} else if c.CustomTLSCACertPool != nil {

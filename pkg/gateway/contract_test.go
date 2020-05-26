@@ -38,12 +38,7 @@ func TestCreateTransaction(t *testing.T) {
 func TestSubmitTransaction(t *testing.T) {
 	c := mockChannelProvider("mychannel")
 
-	gw := &Gateway{
-		options: &gatewayOptions{
-			Discovery: defaultDiscovery,
-			Timeout:   defaultTimeout,
-		},
-	}
+	gw := &Gateway{}
 
 	nw, err := newNetwork(gw, c)
 
@@ -67,12 +62,7 @@ func TestSubmitTransaction(t *testing.T) {
 func TestEvaluateTransaction(t *testing.T) {
 	c := mockChannelProvider("mychannel")
 
-	gw := &Gateway{
-		options: &gatewayOptions{
-			Discovery: defaultDiscovery,
-			Timeout:   defaultTimeout,
-		},
-	}
+	gw := &Gateway{}
 
 	nw, err := newNetwork(gw, c)
 
@@ -91,32 +81,4 @@ func TestEvaluateTransaction(t *testing.T) {
 	if string(result) != "abc" {
 		t.Fatalf("Incorrect transaction result: %s", result)
 	}
-}
-
-func TestContractEvent(t *testing.T) {
-	c := mockChannelProvider("mychannel")
-
-	gw := &Gateway{
-		options: &gatewayOptions{
-			Discovery: defaultDiscovery,
-			Timeout:   defaultTimeout,
-		},
-	}
-
-	nw, err := newNetwork(gw, c)
-
-	if err != nil {
-		t.Fatalf("Failed to create network: %s", err)
-	}
-
-	contr := nw.GetContract("contract1")
-
-	eventID := "test([a-zA-Z]+)"
-
-	reg, _, err := contr.RegisterEvent(eventID)
-	if err != nil {
-		t.Fatalf("Failed to register contract event: %s", err)
-	}
-	defer contr.Unregister(reg)
-
 }

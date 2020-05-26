@@ -168,9 +168,9 @@ func (c *CAClientImpl) CreateIdentity(request *api.IdentityRequest) (*api.Identi
 		return nil, errors.New("must provide identity request")
 	}
 
-	// Check required parameters (ID)
-	if request.ID == "" {
-		return nil, errors.New("ID is required")
+	// Checke required parameters (ID and affiliation)
+	if request.ID == "" || request.Affiliation == "" {
+		return nil, errors.New("ID and affiliation are required")
 	}
 
 	registrar, err := c.getRegistrar(c.registrar.EnrollID, c.registrar.EnrollSecret)
@@ -197,9 +197,9 @@ func (c *CAClientImpl) ModifyIdentity(request *api.IdentityRequest) (*api.Identi
 		return nil, errors.New("must provide identity request")
 	}
 
-	// Check required parameters (ID)
-	if request.ID == "" {
-		return nil, errors.New("ID is required")
+	// Checke required parameters (ID and affiliation)
+	if request.ID == "" || request.Affiliation == "" {
+		return nil, errors.New("ID and affiliation are required")
 	}
 
 	registrar, err := c.getRegistrar(c.registrar.EnrollID, c.registrar.EnrollSecret)
@@ -226,7 +226,7 @@ func (c *CAClientImpl) RemoveIdentity(request *api.RemoveIdentityRequest) (*api.
 		return nil, errors.New("must provide remove identity request")
 	}
 
-	// Check required parameters (ID)
+	// Checke required parameters (ID)
 	if request.ID == "" {
 		return nil, errors.New("ID is required")
 	}
@@ -252,7 +252,7 @@ func (c *CAClientImpl) GetIdentity(id, caname string) (*api.IdentityResponse, er
 		return nil, fmt.Errorf("no CAs configured for organization: %s", c.orgName)
 	}
 
-	// Check required parameters (ID and affiliation)
+	// Checke required parameters (ID and affiliation)
 	if id == "" {
 		return nil, errors.New("id is required")
 	}
@@ -389,7 +389,7 @@ func (c *CAClientImpl) GetAffiliation(affiliation, caname string) (*api.Affiliat
 		return nil, fmt.Errorf("no CAs configured for organization: %s", c.orgName)
 	}
 
-	// Check required parameters (affiliation)
+	// Checke required parameters (affiliation)
 	if affiliation == "" {
 		return nil, errors.New("affiliation is required")
 	}
@@ -426,7 +426,7 @@ func (c *CAClientImpl) AddAffiliation(request *api.AffiliationRequest) (*api.Aff
 		return nil, errors.New("must provide affiliation request")
 	}
 
-	// Check required parameters (Name)
+	// Checke required parameters (Name)
 	if request.Name == "" {
 		return nil, errors.New("Name is required")
 	}
@@ -449,7 +449,7 @@ func (c *CAClientImpl) ModifyAffiliation(request *api.ModifyAffiliationRequest) 
 		return nil, errors.New("must provide affiliation request")
 	}
 
-	// Check required parameters (Name and NewName)
+	// Checke required parameters (Name and NewName)
 	if request.Name == "" || request.NewName == "" {
 		return nil, errors.New("Name and NewName are required")
 	}
@@ -472,7 +472,7 @@ func (c *CAClientImpl) RemoveAffiliation(request *api.AffiliationRequest) (*api.
 		return nil, errors.New("must provide remove affiliation request")
 	}
 
-	// Check required parameters (Name)
+	// Checke required parameters (Name)
 	if request.Name == "" {
 		return nil, errors.New("Name is required")
 	}

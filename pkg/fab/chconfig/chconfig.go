@@ -517,7 +517,6 @@ func loadCapabilities(configValue *common.ConfigValue, configItems *ChannelCfg, 
 
 func loadConfigValue(configItems *ChannelCfg, key string, versionsValue *common.ConfigValue, configValue *common.ConfigValue, groupName string, org string) error {
 	versionsValue.Version = configValue.Version
-	versionsValue.Value = configValue.Value
 
 	switch key {
 	case channelConfig.AnchorPeersKey:

@@ -8,15 +8,15 @@ package orderer
 
 import (
 	reqContext "context"
-	"crypto/x509"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 	"io"
 	"time"
 
+	credentials "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls/gmcredentials"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/multi"
 	"github.com/pkg/errors"
 	"github.com/spf13/cast"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	grpcstatus "google.golang.org/grpc/status"
 

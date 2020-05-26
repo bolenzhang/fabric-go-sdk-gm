@@ -7,8 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 package mockfab
 
 import (
-	tls "crypto/tls"
-	x509 "crypto/x509"
+	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 	"time"
 
 	"github.com/golang/mock/gomock"

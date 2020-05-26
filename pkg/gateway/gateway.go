@@ -8,7 +8,6 @@ package gateway
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/context"
@@ -16,11 +15,6 @@ import (
 	mspProvider "github.com/hyperledger/fabric-sdk-go/pkg/common/providers/msp"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 	"github.com/pkg/errors"
-)
-
-const (
-	defaultTimeout   = 5 * time.Minute
-	defaultDiscovery = true
 )
 
 // Gateway is the entry point to a Fabric network
@@ -32,10 +26,10 @@ type Gateway struct {
 }
 
 type gatewayOptions struct {
-	Identity  mspProvider.SigningIdentity
-	User      string
-	Discovery bool
-	Timeout   time.Duration
+	Identity      mspProvider.SigningIdentity
+	User          string
+	CommitHandler CommitHandlerFactory
+	Discovery     bool
 }
 
 // Option functional arguments can be supplied when connecting to the gateway.
@@ -53,8 +47,8 @@ func Connect(config ConfigOption, identity IdentityOption, options ...Option) (*
 
 	g := &Gateway{
 		options: &gatewayOptions{
-			Discovery: defaultDiscovery,
-			Timeout:   defaultTimeout,
+			CommitHandler: DefaultCommitHandlers.OrgAll,
+			Discovery:     true,
 		},
 	}
 
@@ -171,20 +165,22 @@ func WithUser(user string) IdentityOption {
 	}
 }
 
+// WithCommitHandler is an optional argument to the Connect method which
+// allows an alternative commit handler to be specified. The commit handler defines how
+// client code should wait to receive commit events from peers following submit of a transaction.
+// Currently unimplemented.
+func WithCommitHandler(handler CommitHandlerFactory) Option {
+	return func(gw *Gateway) error {
+		gw.options.CommitHandler = handler
+		return nil
+	}
+}
+
 // WithDiscovery is an optional argument to the Connect method which
 // enables or disables service discovery for all transaction submissions for this gateway.
 func WithDiscovery(discovery bool) Option {
 	return func(gw *Gateway) error {
 		gw.options.Discovery = discovery
-		return nil
-	}
-}
-
-// WithTimeout is an optional argument to the Connect method which
-// defines the commit timeout for all transaction submissions for this gateway.
-func WithTimeout(timeout time.Duration) Option {
-	return func(gw *Gateway) error {
-		gw.options.Timeout = timeout
 		return nil
 	}
 }

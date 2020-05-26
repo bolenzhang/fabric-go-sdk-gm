@@ -9,7 +9,6 @@ package gateway
 import (
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
@@ -65,12 +64,12 @@ func TestConnectNoOptions(t *testing.T) {
 
 	options := gw.options
 
-	if options.Discovery != true {
-		t.Fatal("Discovery not correctly initialized")
+	if options.CommitHandler != DefaultCommitHandlers.OrgAll {
+		t.Fatal("DefaultCommitHandler not correctly initialized")
 	}
 
-	if options.Timeout != defaultTimeout {
-		t.Fatal("Timeout not correctly initialized")
+	if options.Discovery != true {
+		t.Fatal("Discovery not correctly initialized")
 	}
 }
 
@@ -92,12 +91,12 @@ func TestConnectWithSDK(t *testing.T) {
 
 	options := gw.options
 
-	if options.Discovery != true {
-		t.Fatal("Discovery not correctly initialized")
+	if options.CommitHandler != DefaultCommitHandlers.OrgAll {
+		t.Fatal("DefaultCommitHandler not correctly initialized")
 	}
 
-	if options.Timeout != defaultTimeout {
-		t.Fatal("Timeout not correctly initialized")
+	if options.Discovery != true {
+		t.Fatal("Discovery not correctly initialized")
 	}
 }
 
@@ -125,6 +124,23 @@ func TestConnectWithIdentity(t *testing.T) {
 	}
 }
 
+func TestConnectWithCommitHandler(t *testing.T) {
+	gw, err := Connect(
+		WithConfig(config.FromFile("testdata/connection-tls.json")),
+		WithUser("user1"),
+		WithCommitHandler(DefaultCommitHandlers.OrgAny),
+	)
+	if err != nil {
+		t.Fatalf("Failed to create gateway: %s", err)
+	}
+
+	options := gw.options
+
+	if options.CommitHandler != DefaultCommitHandlers.OrgAny {
+		t.Fatal("CommitHandler not set correctly")
+	}
+}
+
 func TestConnectWithDiscovery(t *testing.T) {
 	gw, err := Connect(
 		WithConfig(config.FromFile("testdata/connection-tls.json")),
@@ -142,11 +158,12 @@ func TestConnectWithDiscovery(t *testing.T) {
 	}
 }
 
-func TestConnectWithTimout(t *testing.T) {
+func TestConnectWithMultipleOptions(t *testing.T) {
 	gw, err := Connect(
 		WithConfig(config.FromFile("testdata/connection-tls.json")),
 		WithUser("user1"),
-		WithTimeout(20*time.Second),
+		WithCommitHandler(DefaultCommitHandlers.OrgAny),
+		WithDiscovery(false),
 	)
 	if err != nil {
 		t.Fatalf("Failed to create gateway: %s", err)
@@ -154,8 +171,12 @@ func TestConnectWithTimout(t *testing.T) {
 
 	options := gw.options
 
-	if options.Timeout != 20*time.Second {
-		t.Fatal("Timeout not set correctly")
+	if options.Discovery != false {
+		t.Fatal("Discovery not set correctly")
+	}
+
+	if options.CommitHandler != DefaultCommitHandlers.OrgAny {
+		t.Fatal("CommitHandler not set correctly")
 	}
 }
 
