@@ -12,8 +12,9 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/proto"
+	credentials "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls/gmcredentials"
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/credentials"
+
 	"google.golang.org/grpc/testdata"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/channel"
@@ -26,9 +27,9 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/util/pathvar"
 	"github.com/stretchr/testify/require"
 
+	pb "github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/common/cauthdsl"
 	"github.com/hyperledger/fabric-sdk-go/third_party/github.com/hyperledger/fabric/core/common/ccprovider"
-	pb "github.com/hyperledger/fabric-protos-go/peer"
 )
 
 const (
