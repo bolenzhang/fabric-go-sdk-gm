@@ -9,8 +9,8 @@ import (
 	"crypto/elliptic"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 
 	"github.com/miekg/pkcs11"
@@ -236,11 +236,7 @@ func (p11w *Pkcs11Wrapper) ImportECKey(ec EcdsaKey) (err error) {
 		return
 	}
 
-	err = ec.GenSKI()
-	if err != nil {
-		err = errors.Wrap(err, "failed to generate SKI")
-		return
-	}
+	ec.GenSKI()
 
 	marshaledOID, err := GetECParamMarshaled(ec.PrivKey.Params().Name)
 	if err != nil {
