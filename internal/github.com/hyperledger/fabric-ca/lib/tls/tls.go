@@ -21,8 +21,8 @@ Please review third_party pinning scripts and patches for more details.
 package tls
 
 import (
-	"crypto/tls"
 	"crypto/x509"
+	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
@@ -45,10 +45,9 @@ var DefaultCipherSuites = []uint16{
 
 // ClientTLSConfig defines the key material for a TLS client
 type ClientTLSConfig struct {
-	Enabled     bool     `skip:"true"`
-	CertFiles   [][]byte `help:"A list of comma-separated PEM-encoded trusted certificate bytes"`
-	Client      KeyCertFiles
-	TlsCertPool *x509.CertPool
+	Enabled   bool     `skip:"true"`
+	CertFiles [][]byte `help:"A list of comma-separated PEM-encoded trusted certificate bytes"`
+	Client    KeyCertFiles
 }
 
 // KeyCertFiles defines the files need for client on TLS
@@ -80,18 +79,15 @@ func GetClientTLSConfig(cfg *ClientTLSConfig, csp core.CryptoSuite) (*tls.Config
 	} else {
 		log.Debug("Client TLS certificate and/or key file not provided")
 	}
-	rootCAPool := cfg.TlsCertPool
-	if rootCAPool == nil {
-		rootCAPool = x509.NewCertPool()
-		if len(cfg.CertFiles) == 0 {
-			return nil, errors.New("No trusted root certificates for TLS were provided")
-		}
+	rootCAPool := x509.NewCertPool()
+	if len(cfg.CertFiles) == 0 {
+		return nil, errors.New("No trusted root certificates for TLS were provided")
+	}
 
-		for _, cacert := range cfg.CertFiles {
-			ok := rootCAPool.AppendCertsFromPEM(cacert)
-			if !ok {
-				return nil, errors.New("Failed to process certificate")
-			}
+	for _, cacert := range cfg.CertFiles {
+		ok := rootCAPool.AppendCertsFromPEM(cacert)
+		if !ok {
+			return nil, errors.New("Failed to process certificate")
 		}
 	}
 

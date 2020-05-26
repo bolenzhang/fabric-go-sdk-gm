@@ -1,11 +1,17 @@
 /*
-Copyright IBM Corp. All Rights Reserved.
+Copyright IBM Corp. 2016 All Rights Reserved.
 
-SPDX-License-Identifier: Apache-2.0
-*/
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+		 http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 
 package bccsp
@@ -26,6 +32,19 @@ const (
 	// ECDSAReRand ECDSA key re-randomization
 	ECDSAReRand = "ECDSA_RERAND"
 
+	// RSA at the default security level.
+	// Each BCCSP may or may not support default security level. If not supported than
+	// an error will be returned.
+	RSA = "RSA"
+	// RSA at 1024 bit security level.
+	RSA1024 = "RSA1024"
+	// RSA at 2048 bit security level.
+	RSA2048 = "RSA2048"
+	// RSA at 3072 bit security level.
+	RSA3072 = "RSA3072"
+	// RSA at 4096 bit security level.
+	RSA4096 = "RSA4096"
+
 	// AES Advanced Encryption Standard at the default security level.
 	// Each BCCSP may or may not support default security level. If not supported than
 	// an error will be returned.
@@ -36,6 +55,12 @@ const (
 	AES192 = "AES192"
 	// AES Advanced Encryption Standard at 256 bit security level
 	AES256 = "AES256"
+	// SM4
+	SM4 = "SM4"
+	// SM3
+	SM3 = "SM3"
+	// SM2
+	SM2 = "SM2"
 
 	// HMAC keyed-hash message authentication code
 	HMAC = "HMAC"
@@ -78,6 +103,38 @@ func (opts *ECDSAKeyGenOpts) Algorithm() string {
 // Ephemeral returns true if the key to generate has to be ephemeral,
 // false otherwise.
 func (opts *ECDSAKeyGenOpts) Ephemeral() bool {
+	return opts.Temporary
+}
+
+// SM2KeyGenOpts contains options for SM2 key generation.
+type SM2KeyGenOpts struct {
+	Temporary bool
+}
+
+// Algorithm returns the key generation algorithm identifier (to be used).
+func (opts *SM2KeyGenOpts) Algorithm() string {
+	return SM2
+}
+
+// Ephemeral returns true if the key to generate has to be ephemeral,
+// false otherwise.
+func (opts *SM2KeyGenOpts) Ephemeral() bool {
+	return opts.Temporary
+}
+
+// SM4KeyGenOpts contains options for SM4 key generation.
+type SM4KeyGenOpts struct {
+	Temporary bool
+}
+
+// Algorithm returns the key generation algorithm identifier (to be used).
+func (opts *SM4KeyGenOpts) Algorithm() string {
+	return SM4
+}
+
+// Ephemeral returns true if the key to generate has to be ephemeral,
+// false otherwise.
+func (opts *SM4KeyGenOpts) Ephemeral() bool {
 	return opts.Temporary
 }
 
@@ -229,6 +286,54 @@ func (opts *AES256ImportKeyOpts) Ephemeral() bool {
 	return opts.Temporary
 }
 
+// SM4ImportKeyOpts 实现 bccsp.KeyImportOpts接口
+type SM4ImportKeyOpts struct {
+	Temporary bool
+}
+
+// Algorithm returns the key importation algorithm identifier (to be used).
+func (opts *SM4ImportKeyOpts) Algorithm() string {
+	return SM4
+}
+
+// Ephemeral returns true if the key generated has to be ephemeral,
+// false otherwise.
+func (opts *SM4ImportKeyOpts) Ephemeral() bool {
+	return opts.Temporary
+}
+
+// SM2PrivateKeyImportKeyOpts 实现 bccsp.KeyImportOpts接口
+type SM2PrivateKeyImportOpts struct {
+	Temporary bool
+}
+
+// Algorithm returns the key importation algorithm identifier (to be used).
+func (opts *SM2PrivateKeyImportOpts) Algorithm() string {
+	return SM2
+}
+
+// Ephemeral returns true if the key generated has to be ephemeral,
+// false otherwise.
+func (opts *SM2PrivateKeyImportOpts) Ephemeral() bool {
+	return opts.Temporary
+}
+
+// SM2PublicKeyImportKeyOpts 实现 bccsp.KeyImportOpts接口
+type SM2PublicKeyImportOpts struct {
+	Temporary bool
+}
+
+// Algorithm returns the key importation algorithm identifier (to be used).
+func (opts *SM2PublicKeyImportOpts) Algorithm() string {
+	return SM2
+}
+
+// Ephemeral returns true if the key generated has to be ephemeral,
+// false otherwise.
+func (opts *SM2PublicKeyImportOpts) Ephemeral() bool {
+	return opts.Temporary
+}
+
 // HMACImportKeyOpts contains options for importing HMAC keys.
 type HMACImportKeyOpts struct {
 	Temporary bool
@@ -246,11 +351,44 @@ func (opts *HMACImportKeyOpts) Ephemeral() bool {
 }
 
 // SHAOpts contains options for computing SHA.
-type SHAOpts struct{}
+type SHAOpts struct {
+}
 
 // Algorithm returns the hash algorithm identifier (to be used).
 func (opts *SHAOpts) Algorithm() string {
 	return SHA
+}
+
+// RSAKeyGenOpts contains options for RSA key generation.
+type RSAKeyGenOpts struct {
+	Temporary bool
+}
+
+// Algorithm returns the key generation algorithm identifier (to be used).
+func (opts *RSAKeyGenOpts) Algorithm() string {
+	return RSA
+}
+
+// Ephemeral returns true if the key to generate has to be ephemeral,
+// false otherwise.
+func (opts *RSAKeyGenOpts) Ephemeral() bool {
+	return opts.Temporary
+}
+
+// ECDSAGoPublicKeyImportOpts contains options for RSA key importation from rsa.PublicKey
+type RSAGoPublicKeyImportOpts struct {
+	Temporary bool
+}
+
+// Algorithm returns the key importation algorithm identifier (to be used).
+func (opts *RSAGoPublicKeyImportOpts) Algorithm() string {
+	return RSA
+}
+
+// Ephemeral returns true if the key to generate has to be ephemeral,
+// false otherwise.
+func (opts *RSAGoPublicKeyImportOpts) Ephemeral() bool {
+	return opts.Temporary
 }
 
 // X509PublicKeyImportOpts contains options for importing public keys from an x509 certificate

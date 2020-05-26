@@ -3,22 +3,19 @@ Copyright IBM Corp. All Rights Reserved.
 
 SPDX-License-Identifier: Apache-2.0
 */
-/*
-Notice: This file has been modified for Hyperledger Fabric SDK Go usage.
-Please review third_party pinning scripts and patches for more details.
-*/
 
 package pkcs11
 
 import (
 	"crypto/ecdsa"
+	"crypto/rsa"
 	"crypto/x509"
 	"os"
 
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp/sw"
-	flogging "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
-	sdkp11 "github.com/hyperledger/fabric-sdk-go/pkg/core/cryptosuite/common/pkcs11"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/flogging"
+	"github.com/miekg/pkcs11"
 	"github.com/pkg/errors"
 )
 
@@ -47,12 +44,18 @@ func New(opts PKCS11Opts, keyStore bccsp.KeyStore) (bccsp.BCCSP, error) {
 		return nil, errors.New("Invalid bccsp.KeyStore instance. It must be different from nil")
 	}
 
-	//Load PKCS11 context handle
-	pkcs11Ctx, err := sdkp11.LoadContextAndLogin(opts.Library, opts.Pin, opts.Label)
+	lib := opts.Library
+	pin := opts.Pin
+	label := opts.Label
+	ctx, slot, session, err := loadLib(lib, pin, label)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed initializing PKCS11 context")
+		return nil, errors.Wrapf(err, "Failed initializing PKCS11 library %s %s",
+			lib, label)
 	}
-	csp := &impl{BCCSP: swCSP, conf: conf, softVerify: opts.SoftVerify, pkcs11Ctx: pkcs11Ctx}
+
+	sessions := make(chan pkcs11.SessionHandle, sessionCacheSize)
+	csp := &impl{swCSP, conf, keyStore, ctx, sessions, slot, lib, opts.SoftVerify, opts.Immutable}
+	csp.returnSession(*session)
 	return csp, nil
 }
 
@@ -60,8 +63,13 @@ type impl struct {
 	bccsp.BCCSP
 
 	conf *config
+	ks   bccsp.KeyStore
 
-	pkcs11Ctx  *sdkp11.ContextHandle
+	ctx      *pkcs11.Ctx
+	sessions chan pkcs11.SessionHandle
+	slot     uint
+
+	lib        string
 	softVerify bool
 	//Immutable flag makes object immutable
 	immutable bool
@@ -131,8 +139,10 @@ func (csp *impl) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (k bccsp.K
 		switch pk.(type) {
 		case *ecdsa.PublicKey:
 			return csp.KeyImport(pk, &bccsp.ECDSAGoPublicKeyImportOpts{Temporary: opts.Ephemeral()})
+		case *rsa.PublicKey:
+			return csp.KeyImport(pk, &bccsp.RSAGoPublicKeyImportOpts{Temporary: opts.Ephemeral()})
 		default:
-			return nil, errors.New("Certificate's public key type not recognized. Supported keys: [ECDSA]")
+			return nil, errors.New("Certificate's public key type not recognized. Supported keys: [ECDSA, RSA]")
 		}
 
 	default:
@@ -170,11 +180,11 @@ func (csp *impl) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) ([]byte
 	}
 
 	// Check key type
-	switch key := k.(type) {
+	switch k.(type) {
 	case *ecdsaPrivateKey:
-		return csp.signECDSA(*key, digest, opts)
+		return csp.signECDSA(*k.(*ecdsaPrivateKey), digest, opts)
 	default:
-		return csp.BCCSP.Sign(key, digest, opts)
+		return csp.BCCSP.Sign(k, digest, opts)
 	}
 }
 
@@ -192,11 +202,11 @@ func (csp *impl) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.Signer
 	}
 
 	// Check key type
-	switch key := k.(type) {
+	switch k.(type) {
 	case *ecdsaPrivateKey:
-		return csp.verifyECDSA(key.pub, signature, digest, opts)
+		return csp.verifyECDSA(k.(*ecdsaPrivateKey).pub, signature, digest, opts)
 	case *ecdsaPublicKey:
-		return csp.verifyECDSA(*key, signature, digest, opts)
+		return csp.verifyECDSA(*k.(*ecdsaPublicKey), signature, digest, opts)
 	default:
 		return csp.BCCSP.Verify(k, signature, digest, opts)
 	}
@@ -229,7 +239,7 @@ func FindPKCS11Lib() (lib, pin, label string) {
 			"/usr/lib/x86_64-linux-gnu/softhsm/libsofthsm2.so",           //Ubuntu
 			"/usr/lib/s390x-linux-gnu/softhsm/libsofthsm2.so",            //Ubuntu
 			"/usr/lib/powerpc64le-linux-gnu/softhsm/libsofthsm2.so",      //Power
-			"/usr/local/Cellar/softhsm/2.5.0/lib/softhsm/libsofthsm2.so", //MacOS
+			"/usr/local/Cellar/softhsm/2.1.0/lib/softhsm/libsofthsm2.so", //MacOS
 		}
 		for _, path := range possibilities {
 			if _, err := os.Stat(path); !os.IsNotExist(err) {

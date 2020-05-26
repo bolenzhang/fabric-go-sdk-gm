@@ -16,11 +16,11 @@ Please review third_party pinning scripts and patches for more details.
 package attrmgr
 
 import (
-	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/json"
 	"fmt"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 
 	"github.com/pkg/errors"
 )
