@@ -24,8 +24,6 @@ import (
 )
 
 // 定义国密SM2 keygen 结构体， 实现 KeyGenerator接口
-// TODO: 注意差别，原本的变量只是作为error的时候输出使用，用来区别是哪种长度的椭圆加密出错
-// TODO: 但是，当我们真正输出他的时候，只能看到一堆地址信息，源码中的%v没能识别
 type sm2KeyGenerator struct {
 	//curve elliptic.Curve
 }

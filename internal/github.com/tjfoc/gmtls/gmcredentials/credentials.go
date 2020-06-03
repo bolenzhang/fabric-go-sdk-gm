@@ -22,11 +22,15 @@ import (
 	"net"
 	"strings"
 
-	"github.com/tjfoc/gmsm/sm2"
-	"github.com/tjfoc/gmtls"
+	//"github.com/tjfoc/gmsm/sm2"
+	//"github.com/tjfoc/gmtls"
+	//
+	//credentials "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls/gmcredentials"
 
-	credentials "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls/gmcredentials"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 
+	"google.golang.org/grpc/credentials"
 	"golang.org/x/net/context"
 )
 

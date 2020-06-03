@@ -18,7 +18,8 @@ package gm
 import (
 	"crypto/elliptic"
 	"fmt"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm3"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm3"  //TODO: Notice here for import cycle!!!
+	//"github.com/tjfoc/gmsm/sm3"
 	"hash"
 )
 

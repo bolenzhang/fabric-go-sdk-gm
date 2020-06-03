@@ -25,7 +25,9 @@ import (
 	"math/big"
 
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
+	"crypto/ecdsa"
 )
+
 
 func signSM2(k *sm2.PrivateKey, digest []byte, opts bccsp.SignerOpts) ([]byte, error) {
 	return k.Sign(rand.Reader, digest, opts)
@@ -54,6 +56,7 @@ func (v *sm2PublicKeyKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, 
 	return verifySM2(k.(*sm2PublicKey).pubKey, signature, digest, opts)
 }
 
+//TODO(***): 这个文件内不应该出现ecdsa？
 type ecdsaSigner struct{}
 
 func (s *ecdsaSigner) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) ([]byte, error) {
@@ -126,23 +129,23 @@ func UnmarshalSM2Signature(raw []byte) (*big.Int, *big.Int, error) {
 
 	// Validate sig
 	if sig.R == nil {
-		return nil, nil, errors.New("invalid signature, R must be different from nil")
+		return nil, nil, errors.New("Invalid signature, R must be different from nil")
 	}
 	if sig.S == nil {
-		return nil, nil, errors.New("invalid signature, S must be different from nil")
+		return nil, nil, errors.New("Invalid signature, S must be different from nil")
 	}
 
 	if sig.R.Sign() != 1 {
-		return nil, nil, errors.New("invalid signature, R must be larger than zero")
+		return nil, nil, errors.New("Invalid signature, R must be larger than zero")
 	}
 	if sig.S.Sign() != 1 {
-		return nil, nil, errors.New("invalid signature, S must be larger than zero")
+		return nil, nil, errors.New("Invalid signature, S must be larger than zero")
 	}
 
 	return sig.R, sig.S, nil
 }
 
-func SignatureToLowS(k *sm2.PublicKey, signature []byte) ([]byte, error) {
+func SignatureToLowS(k *ecdsa.PublicKey, signature []byte) ([]byte, error) {
 	r, s, err := UnmarshalSM2Signature(signature)
 	if err != nil {
 		return nil, err
@@ -160,24 +163,14 @@ func SignatureToLowS(k *sm2.PublicKey, signature []byte) ([]byte, error) {
 	return signature, nil
 }
 
-// IsLow checks that s is a low-S
-func IsLowS(k *sm2.PublicKey, s *big.Int) (bool, error) {
-	halfOrder, ok := curveHalfOrders[k.Curve]
-	if !ok {
-		return false, fmt.Errorf("curve not recognized [%s]", k.Curve)
-	}
-
-	return s.Cmp(halfOrder) != 1, nil
-
-}
-
-func ToLowS(k *sm2.PublicKey, s *big.Int) (*big.Int, bool, error) {
+//TODO: Notice here!  *ecdsa.PublicKey change to *sm2.PubKey?
+func ToLowS(k *ecdsa.PublicKey, s *big.Int) (*big.Int, bool, error) {
 	lowS, err := IsLowS(k, s)
 	if err != nil {
 		return nil, false, err
 	}
 
-	if !lowS {
+	if !lowS && k.Curve != sm2.P256Sm2(){
 		// Set s to N - s that will be then in the lower part of signature space
 		// less or equal to half order
 		s.Sub(k.Params().N, s)
@@ -186,4 +179,15 @@ func ToLowS(k *sm2.PublicKey, s *big.Int) (*big.Int, bool, error) {
 	}
 
 	return s, false, nil
+}
+
+// IsLow checks that s is a low-S
+func IsLowS(k *ecdsa.PublicKey, s *big.Int) (bool, error) {
+	halfOrder, ok := curveHalfOrders[k.Curve]
+	if !ok {
+		return false, fmt.Errorf("curve not recognized [%s]", k.Curve)
+	}
+
+	return s.Cmp(halfOrder) != 1, nil
+
 }

@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package gm
+package sw
 
 import (
 	"errors"
@@ -39,8 +39,8 @@ func (k *sm4PrivateKey) Bytes() (raw []byte, err error) {
 
 // SKI returns the subject key identifier of this key.
 func (k *sm4PrivateKey) SKI() (ski []byte) {
-	//hash := sm3.New()
 	hash := sha256.New()
+	//hash := sm3.New()
 	hash.Write([]byte{0x01})
 	hash.Write(k.privKey)
 	return hash.Sum(nil)

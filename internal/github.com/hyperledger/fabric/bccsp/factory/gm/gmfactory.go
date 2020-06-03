@@ -42,11 +42,11 @@ func (f *GMFactory) Get(gmOpts *GmOpts) (bccsp.BCCSP, error) {
 		ks = gm.NewDummyKeyStore()
 	}
 
-	return gm.New(gmOpts.SecLevel, "GMSM3", ks)
+	return gm.NewWithParams(gmOpts.SecLevel, "GMSM3", ks)
 	//return gm.New(gmOpts.SecLevel, gmOpts.HashFamily, ks)
 }
 
-// SwOpts contains options for the SWFactory
+// GMOpts contains options for the GMFactory
 type GmOpts struct {
 	// Default algorithms when not specified (Deprecated?)
 	SecLevel   int    `mapstructure:"security" json:"security" yaml:"Security"`

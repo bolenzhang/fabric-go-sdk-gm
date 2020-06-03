@@ -27,16 +27,19 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
+	"crypto/rsa"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 )
+
 
 type ecdsaKeyGenerator struct {
 	curve elliptic.Curve
 }
 
-func (kg *ecdsaKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
-	privKey, err := ecdsa.GenerateKey(kg.curve, rand.Reader)
+func (keygen *ecdsaKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
+	privKey, err := ecdsa.GenerateKey(keygen.curve, rand.Reader)
 	if err != nil {
-		return nil, fmt.Errorf("Failed generating ECDSA key for [%v]: [%s]", kg.curve, err)
+		return nil, fmt.Errorf("Failed generating ECDSA key for [%v]: [%s]", keygen.curve, err)
 	}
 
 	return &ecdsaPrivateKey{privKey}, nil
@@ -46,11 +49,53 @@ type aesKeyGenerator struct {
 	length int
 }
 
-func (kg *aesKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
-	lowLevelKey, err := GetRandomBytes(int(kg.length))
+func (keygen *aesKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
+	lowLevelKey, err := GetRandomBytes(int(keygen.length))
 	if err != nil {
-		return nil, fmt.Errorf("Failed generating AES %d key [%s]", kg.length, err)
+		return nil, fmt.Errorf("Failed generating AES %d key [%s]", keygen.length, err)
 	}
 
 	return &aesPrivateKey{lowLevelKey, false}, nil
+}
+
+type rsaKeyGenerator struct {
+	length int
+}
+
+func (keygen *rsaKeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
+	lowLevelKey, err := rsa.GenerateKey(rand.Reader, int(keygen.length))
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed generating RSA %d key [%s]", keygen.length, err)
+	}
+
+	return &rsaPrivateKey{lowLevelKey}, nil
+}
+
+// 定义国密SM2 keygen 结构体， 实现 KeyGenerator接口
+// TODO: 应该不需要sm2的KeyGen
+type sm2KeyGenerator struct {
+	//curve elliptic.Curve
+}
+
+func (keygen *sm2KeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
+	privKey, err := sm2.GenerateKey()
+	if err != nil {
+		return nil, fmt.Errorf("Failed generating SM2 key for [%s]", err)
+	}
+
+	return &sm2PrivateKey{privKey}, nil
+}
+
+type sm4KeyGenerator struct {
+	length int
+}
+
+func (keygen *sm4KeyGenerator) KeyGen(opts bccsp.KeyGenOpts) (bccsp.Key, error) {
+	lowLevelKey, err := GetRandomBytes(int(keygen.length))
+	if err != nil {
+		return nil, fmt.Errorf("Failed generating AES %d key [%s]", keygen.length, err)
+	}
+
+	return &sm4PrivateKey{lowLevelKey, false}, nil
 }

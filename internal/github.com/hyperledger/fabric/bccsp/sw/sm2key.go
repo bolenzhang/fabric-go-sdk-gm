@@ -13,16 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package gm
+package sw
 
 import (
 	"crypto/elliptic"
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
-
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 )
 
 type sm2PrivateKey struct {
@@ -46,6 +45,7 @@ func (k *sm2PrivateKey) SKI() []byte {
 
 	// Hash it
 	hash := sha256.New()
+	//hash := sm3.New()
 	hash.Write(raw)
 	return hash.Sum(nil)
 }
@@ -75,7 +75,7 @@ type sm2PublicKey struct {
 // Bytes converts this key to its byte representation,
 // if this operation is allowed.
 func (k *sm2PublicKey) Bytes() (raw []byte, err error) {
-	raw, err = sm2.MarshalSm2PublicKey(k.pubKey)
+	raw, err = sm2.MarshalSm2PublicKey(k.pubKey) //TODO: 确认下这块
 	if err != nil {
 		return nil, fmt.Errorf("Failed marshalling key [%s]", err)
 	}
@@ -93,6 +93,7 @@ func (k *sm2PublicKey) SKI() []byte {
 
 	// Hash it
 	hash := sha256.New()
+	//hash := sm3.New()
 	hash.Write(raw)
 	return hash.Sum(nil)
 }

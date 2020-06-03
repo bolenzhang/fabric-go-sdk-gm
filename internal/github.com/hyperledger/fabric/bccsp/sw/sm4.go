@@ -14,35 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gm
+package sw
 
 import (
-	"crypto/rand"
-	"errors"
-	"fmt"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm4"
 )
-
-// GetRandomBytes returns len random looking bytes
-func GetRandomBytes(len int) ([]byte, error) {
-	if len < 0 {
-		return nil, errors.New("Len must be larger than 0")
-	}
-
-	buffer := make([]byte, len)
-
-	n, err := rand.Read(buffer)
-	if err != nil {
-		return nil, err
-	}
-	if n != len {
-		return nil, fmt.Errorf("Buffer not filled. Requested [%d], got [%d]", len, n)
-	}
-
-	return buffer, nil
-}
-
 // AESCBCPKCS7Encrypt combines CBC encryption and PKCS7 padding
 func SM4Encrypt(key, src []byte) ([]byte, error) {
 	// // First pad

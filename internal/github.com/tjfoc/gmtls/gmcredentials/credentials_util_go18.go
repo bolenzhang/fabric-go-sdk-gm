@@ -15,7 +15,8 @@ limitations under the License.
 
 package gmcredentials
 
-import "github.com/tjfoc/gmtls"
+//import "github.com/tjfoc/gmtls"
+import "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 
 // cloneTLSConfig returns a shallow clone of the exported
 // fields of cfg, ignoring the unexported sync.Once, which

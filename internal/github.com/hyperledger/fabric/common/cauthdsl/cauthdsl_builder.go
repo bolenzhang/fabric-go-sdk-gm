@@ -126,7 +126,26 @@ func SignedByMspAdmin(mspId string) *cb.SignaturePolicyEnvelope {
 
 //wrapper for generating "any of a given role" type policies
 func signedByAnyOfGivenRole(role msp.MSPRole_MSPRoleType, ids []string) *cb.SignaturePolicyEnvelope {
-	return SignedByNOutOfGivenRole(1, role, ids)
+	// we create an array of principals, one principal
+	// per application MSP defined on this chain
+	sort.Strings(ids)
+	principals := make([]*msp.MSPPrincipal, len(ids))
+	sigspolicy := make([]*cb.SignaturePolicy, len(ids))
+	for i, id := range ids {
+		principals[i] = &msp.MSPPrincipal{
+			PrincipalClassification: msp.MSPPrincipal_ROLE,
+			Principal: protoutil.MarshalOrPanic(&msp.MSPRole{Role: role, MspIdentifier: id})}
+		sigspolicy[i] = SignedBy(int32(i))
+	}
+
+	// create the policy: it requires exactly 1 signature from any of the principals
+	p := &cb.SignaturePolicyEnvelope{
+		Version:    0,
+		Rule:       NOutOf(1, sigspolicy),
+		Identities: principals,
+	}
+
+	return p
 }
 
 func SignedByNOutOfGivenRole(n int32, role msp.MSPRole_MSPRoleType, ids []string) *cb.SignaturePolicyEnvelope {

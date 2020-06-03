@@ -29,7 +29,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tjfoc/gmsm/sm2"
+	//"github.com/tjfoc/gmsm/sm2"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 )
 
 const (

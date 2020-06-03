@@ -25,5 +25,5 @@ import (
 type sm2PublicKeyKeyDeriver struct{}
 
 func (kd *sm2PublicKeyKeyDeriver) KeyDeriv(k bccsp.Key, opts bccsp.KeyDerivOpts) (dk bccsp.Key, err error) {
-	return nil, errors.New("Not implemented gm KeyDeriver Impl have error")
+	return nil, errors.New("KeyDeriv not implemented!")
 }
