@@ -342,7 +342,6 @@ func (c *Client) Enroll(enrollmentID string, opts ...EnrollmentOption) error {
 		Profile: eo.profile,
 		Type:    eo.typ,
 		Label:   eo.label,
-		CSR:     createCSRInfo(eo.csr),
 	}
 
 	if req.CAName == "" {
@@ -385,9 +384,7 @@ func (c *Client) Reenroll(enrollmentID string, opts ...EnrollmentOption) error {
 		Profile: eo.profile,
 		Label:   eo.label,
 		CAName:  c.caName,
-		CSR:     createCSRInfo(eo.csr),
 	}
-
 	if req.CAName == "" {
 		req.CAName = c.caName
 	}
@@ -666,18 +663,6 @@ func fillAffiliationInfo(info *AffiliationInfo, name string, affiliations []mspa
 		info.Affiliations = children
 	}
 	return nil
-}
-
-func createCSRInfo(csr *CSRInfo) *mspapi.CSRInfo {
-	if csr == nil {
-		// csr is not obrigatory, so we can return nil
-		return nil
-	}
-
-	return &mspapi.CSRInfo{
-		CN:    csr.CN,
-		Hosts: csr.Hosts,
-	}
 }
 
 func getAllAttributes(attrs []mspapi.Attribute) []Attribute {

@@ -11,7 +11,7 @@ import (
 	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 	"time"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/flogging"
+	flogging "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/metrics"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"

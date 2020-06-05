@@ -14,7 +14,8 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp/sw"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/flogging"
+	//"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/flogging"
+	flogging "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
 	"github.com/miekg/pkcs11"
 	"github.com/pkg/errors"
 )

@@ -203,7 +203,7 @@ func (msp *bccspmsp) validateIdentityOUsV11(id *identity) error {
 	return nil
 }
 
-func (msp *bccspmsp) validateIdentityOUsV143(id *identity) error {
+func (msp *bccspmsp) validateIdentityOUsV142(id *identity) error {
 	// Run the same checks as per V1
 	err := msp.validateIdentityOUsV1(id)
 	if err != nil {

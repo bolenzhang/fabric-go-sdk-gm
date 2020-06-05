@@ -28,7 +28,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tjfoc/gmsm/sm2"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 )
 
 type clientHandshakeState struct {

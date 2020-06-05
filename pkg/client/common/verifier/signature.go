@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 package verifier
 
 import (
-	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
+	"crypto/x509"
 	"time"
 
 	"github.com/hyperledger/fabric-protos-go/common"

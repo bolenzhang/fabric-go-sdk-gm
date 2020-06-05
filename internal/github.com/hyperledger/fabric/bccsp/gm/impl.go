@@ -20,8 +20,13 @@ import (
 	"reflect"
 
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/flogging"
+	//"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/flogging"
+	flogging "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
 	"github.com/pkg/errors"
+	"crypto/sha512"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm3"
+	"crypto/sha256"
+	"golang.org/x/crypto/sha3"
 )
 
 var (
@@ -34,7 +39,7 @@ var (
 // Encryptor, Decryptor, Signer, Verifier, Hasher. Each wrapper is bound to a
 // goland type representing either an option or a key.
 type CSP struct {
-	ks bccsp.KeyStore
+	ks bccsp.KeyStore //key存储系统对象，存储和获取Key对象
 
 	KeyGenerators map[reflect.Type]KeyGenerator
 	KeyDerivers   map[reflect.Type]KeyDeriver
@@ -46,7 +51,20 @@ type CSP struct {
 	Hashers       map[reflect.Type]Hasher
 }
 
-func New(keyStore bccsp.KeyStore) (*CSP, error) {
+func NewDefaultSecurityLevel(keyStorePath string) (bccsp.BCCSP, error) {
+	ks := &fileBasedKeyStore{}
+	if err := ks.Init(nil, keyStorePath, false); err != nil {
+		return nil, errors.Wrapf(err, "Failed initializing key store at [%v]", keyStorePath)
+	}
+
+	return NewWithParams(256, "SHA2", ks)
+}
+
+func NewDefaultSecurityLevelWithKeystore(keyStore bccsp.KeyStore) (bccsp.BCCSP, error) {
+	return NewWithParams(256, "SHA2", keyStore)
+}
+
+func NewGMCSP(keyStore bccsp.KeyStore) (*CSP, error) {
 	if keyStore == nil {
 		return nil, errors.Errorf("Invalid bccsp.KeyStore instance. It must be different from nil.")
 	}
@@ -67,19 +85,80 @@ func New(keyStore bccsp.KeyStore) (*CSP, error) {
 	return csp, nil
 }
 
-// KeyGen generates a key using opts.
+// NewWithParams returns a new instance of the software-based BCCSP
+// set at the passed security level, hash family and KeyStore.
+func NewWithParams(securityLevel int, hashFamily string, keyStore bccsp.KeyStore) (bccsp.BCCSP, error) {
+	// Init config
+	conf := &config{}
+	err := conf.setSecurityLevel(securityLevel, hashFamily) //注意此处其实并没用, keyDerive和hashfunc会用到
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed initializing configuration at [%v,%v]", securityLevel, hashFamily)
+	}
+
+	gmcsp, err := NewGMCSP(keyStore)
+	if err != nil {
+		return nil, err
+	}
+
+	// Notice that errors are ignored here because some test will fail if one
+	// of the following call fails.
+
+	// Set the Encryptors
+	gmcsp.AddWrapper(reflect.TypeOf(&sm4PrivateKey{}), &sm4Encryptor{}) // sm4 加密
+
+	// Set the Decryptors
+	gmcsp.AddWrapper(reflect.TypeOf(&sm4PrivateKey{}), &sm4Decryptor{}) // sm4 解密
+
+	// Set the Signers
+	gmcsp.AddWrapper(reflect.TypeOf(&sm2PrivateKey{}), &sm2Signer{}) // sm2 国密签名
+	gmcsp.AddWrapper(reflect.TypeOf(&ecdsaPrivateKey{}), &ecdsaSigner{})
+
+	// Set the Verifiers
+	gmcsp.AddWrapper(reflect.TypeOf(&ecdsaPrivateKey{}), &ecdsaPrivateKeyVerifier{})
+	gmcsp.AddWrapper(reflect.TypeOf(&ecdsaPublicKey{}), &ecdsaPublicKeyKeyVerifier{})
+	gmcsp.AddWrapper(reflect.TypeOf(&sm2PrivateKey{}), &sm2PrivateKeyVerifier{})  // sm2 私钥验证
+	gmcsp.AddWrapper(reflect.TypeOf(&sm2PublicKey{}), &sm2PublicKeyKeyVerifier{}) // sm2 公钥验证
+
+	// Set the Hashers
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SHAOpts{}), &hasher{hash: conf.hashFunction})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SHA256Opts{}), &hasher{hash: sm3.New}) // sm3 Hash选项
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SHA256Opts{}), &hasher{hash: sha256.New})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SHA384Opts{}), &hasher{hash: sha512.New384})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SHA3_256Opts{}), &hasher{hash: sha3.New256})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SHA3_384Opts{}), &hasher{hash: sha3.New384})
+
+	// Set the key generators
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SM2KeyGenOpts{}), &sm2KeyGenerator{})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SM4KeyGenOpts{}), &sm4KeyGenerator{length: 32})
+
+	// Set the key generators
+
+
+	// Set the key importers
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SM4ImportKeyOpts{}), &sm4ImportKeyOptsKeyImporter{})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SM2PrivateKeyImportOpts{}), &sm2PrivateKeyImportOptsKeyImporter{})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SM2PublicKeyImportOpts{}), &sm2PublicKeyImportOptsKeyImporter{})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.ECDSAPKIXPublicKeyImportOpts{}), &ecdsaPKIXPublicKeyImportOptsKeyImporter{})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.ECDSAPrivateKeyImportOpts{}), &ecdsaPrivateKeyImportOptsKeyImporter{})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.ECDSAGoPublicKeyImportOpts{}), &ecdsaGoPublicKeyImportOptsKeyImporter{})
+	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.X509PublicKeyImportOpts{}), &x509PublicKeyImportOptsKeyImporter{bccsp: gmcsp})
+
+	return gmcsp, nil
+}
+
+// KeyGen use opts to generate a key.
 func (csp *CSP) KeyGen(opts bccsp.KeyGenOpts) (k bccsp.Key, err error) {
 	// Validate arguments
 	if opts == nil {
 		return nil, errors.New("Invalid Opts parameter. It must not be nil.")
 	}
 
-	keyGenerator, found := csp.KeyGenerators[reflect.TypeOf(opts)]
-	if !found {
+	keyGenerator, ok := csp.KeyGenerators[reflect.TypeOf(opts)]
+	if !ok {
 		return nil, errors.Errorf("Unsupported 'KeyGenOpts' provided [%v]", opts)
 	}
 
-	k, err = keyGenerator.KeyGen(opts)
+	k, err = keyGenerator.KeyGen(opts) //if gm's keyGen, will exec sm2KeyGenerator.KeyGen
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed generating key with opts [%v]", opts)
 	}
@@ -96,8 +175,9 @@ func (csp *CSP) KeyGen(opts bccsp.KeyGenOpts) (k bccsp.Key, err error) {
 	return k, nil
 }
 
-// KeyDeriv derives a key from k using opts.
-// The opts argument should be appropriate for the primitive used.
+//todo: 有空研究下派生key的使用场景
+//Notice! gm's keyDriv not implement!
+// KeyDeriv 根据opts从k中重新生成一个key.
 func (csp *CSP) KeyDeriv(k bccsp.Key, opts bccsp.KeyDerivOpts) (dk bccsp.Key, err error) {
 	// Validate arguments
 	if k == nil {
@@ -107,8 +187,8 @@ func (csp *CSP) KeyDeriv(k bccsp.Key, opts bccsp.KeyDerivOpts) (dk bccsp.Key, er
 		return nil, errors.New("Invalid opts. It must not be nil.")
 	}
 
-	keyDeriver, found := csp.KeyDerivers[reflect.TypeOf(k)]
-	if !found {
+	keyDeriver, ok := csp.KeyDerivers[reflect.TypeOf(k)]
+	if !ok {
 		return nil, errors.Errorf("Unsupported 'Key' provided [%v]", k)
 	}
 
@@ -129,8 +209,7 @@ func (csp *CSP) KeyDeriv(k bccsp.Key, opts bccsp.KeyDerivOpts) (dk bccsp.Key, er
 	return k, nil
 }
 
-// KeyImport imports a key from its raw representation using opts.
-// The opts argument should be appropriate for the primitive used.
+// 根据key导入选项opts从一个key原始数据中导入一个key
 func (csp *CSP) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (k bccsp.Key, err error) {
 	// Validate arguments
 	if raw == nil {
@@ -140,12 +219,12 @@ func (csp *CSP) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (k bccsp.Ke
 		return nil, errors.New("Invalid opts. It must not be nil.")
 	}
 
-	keyImporter, found := csp.KeyImporters[reflect.TypeOf(opts)]
-	if !found {
+	keyImporter, ok := csp.KeyImporters[reflect.TypeOf(opts)]
+	if !ok {
 		return nil, errors.Errorf("Unsupported 'KeyImportOpts' provided [%v]", opts)
 	}
 
-	k, err = keyImporter.KeyImport(raw, opts)
+	k, err = keyImporter.KeyImport(raw, opts) //todo: 改成pubKey. 注意这里！ k.pubkey.x是空的
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed importing key with opts [%v]", opts)
 	}
@@ -162,8 +241,7 @@ func (csp *CSP) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (k bccsp.Ke
 	return
 }
 
-// GetKey returns the key this CSP associates to
-// the Subject Key Identifier ski.
+// 根据ski返回相关的key
 func (csp *CSP) GetKey(ski []byte) (k bccsp.Key, err error) {
 	k, err = csp.ks.GetKey(ski)
 	if err != nil {
@@ -173,15 +251,15 @@ func (csp *CSP) GetKey(ski []byte) (k bccsp.Key, err error) {
 	return
 }
 
-// Hash hashes messages msg using options opts.
+// //根据哈希选项opts哈希一个消息msg
 func (csp *CSP) Hash(msg []byte, opts bccsp.HashOpts) (digest []byte, err error) {
 	// Validate arguments
 	if opts == nil {
 		return nil, errors.New("Invalid opts. It must not be nil.")
 	}
 
-	hasher, found := csp.Hashers[reflect.TypeOf(opts)]
-	if !found {
+	hasher, ok:= csp.Hashers[reflect.TypeOf(opts)]
+	if !ok {
 		return nil, errors.Errorf("Unsupported 'HashOpt' provided [%v]", opts)
 	}
 
@@ -192,17 +270,15 @@ func (csp *CSP) Hash(msg []byte, opts bccsp.HashOpts) (digest []byte, err error)
 
 	return
 }
-
-// GetHash returns and instance of hash.Hash using options opts.
-// If opts is nil then the default hash function is returned.
+// 获取hash
 func (csp *CSP) GetHash(opts bccsp.HashOpts) (h hash.Hash, err error) {
 	// Validate arguments
 	if opts == nil {
 		return nil, errors.New("Invalid opts. It must not be nil.")
 	}
 
-	hasher, found := csp.Hashers[reflect.TypeOf(opts)]
-	if !found {
+	hasher, ok := csp.Hashers[reflect.TypeOf(opts)]
+	if !ok {
 		return nil, errors.Errorf("Unsupported 'HashOpt' provided [%v]", opts)
 	}
 
@@ -214,12 +290,7 @@ func (csp *CSP) GetHash(opts bccsp.HashOpts) (h hash.Hash, err error) {
 	return
 }
 
-// Sign signs digest using key k.
-// The opts argument should be appropriate for the primitive used.
-//
-// Note that when a signature of a hash of a larger message is needed,
-// the caller is responsible for hashing the larger message and passing
-// the hash (as digest).
+// 通过key对消息进行签名，如果message较大, 调用者要负责对message hash后进行签名. todo:// 应该对所有msg先hash再sign
 func (csp *CSP) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) (signature []byte, err error) {
 	// Validate arguments
 	if k == nil {
@@ -229,10 +300,9 @@ func (csp *CSP) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) (signatu
 		return nil, errors.New("Invalid digest. Cannot be empty.")
 	}
 
-	keyType := reflect.TypeOf(k)
-	signer, found := csp.Signers[keyType]
-	if !found {
-		return nil, errors.Errorf("Unsupported 'SignKey' provided [%s]", keyType)
+	signer, ok := csp.Signers[reflect.TypeOf(k)]
+	if !ok {
+		return nil, errors.Errorf("Unsupported 'SignKey' provided [%v]", k )
 	}
 
 	signature, err = signer.Sign(k, digest, opts)
@@ -243,7 +313,7 @@ func (csp *CSP) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) (signatu
 	return
 }
 
-// Verify verifies signature against key k and digest
+// 通过对比k和digest，验证签名
 func (csp *CSP) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerOpts) (valid bool, err error) {
 	// Validate arguments
 	if k == nil {
@@ -256,8 +326,8 @@ func (csp *CSP) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerO
 		return false, errors.New("Invalid digest. Cannot be empty.")
 	}
 
-	verifier, found := csp.Verifiers[reflect.TypeOf(k)]
-	if !found {
+	verifier, ok := csp.Verifiers[reflect.TypeOf(k)]
+	if !ok {
 		return false, errors.Errorf("Unsupported 'VerifyKey' provided [%v]", k)
 	}
 
@@ -269,32 +339,30 @@ func (csp *CSP) Verify(k bccsp.Key, signature, digest []byte, opts bccsp.SignerO
 	return
 }
 
-// Encrypt encrypts plaintext using key k.
-// The opts argument should be appropriate for the primitive used.
+// 根据opts使用k进行加密
 func (csp *CSP) Encrypt(k bccsp.Key, plaintext []byte, opts bccsp.EncrypterOpts) ([]byte, error) {
 	// Validate arguments
 	if k == nil {
 		return nil, errors.New("Invalid Key. It must not be nil.")
 	}
 
-	encryptor, found := csp.Encryptors[reflect.TypeOf(k)]
-	if !found {
+	encryptor, ok := csp.Encryptors[reflect.TypeOf(k)]
+	if !ok {
 		return nil, errors.Errorf("Unsupported 'EncryptKey' provided [%v]", k)
 	}
 
 	return encryptor.Encrypt(k, plaintext, opts)
 }
 
-// Decrypt decrypts ciphertext using key k.
-// The opts argument should be appropriate for the primitive used.
+// 根据opts使用k对ciphertext进行解密
 func (csp *CSP) Decrypt(k bccsp.Key, ciphertext []byte, opts bccsp.DecrypterOpts) (plaintext []byte, err error) {
 	// Validate arguments
 	if k == nil {
 		return nil, errors.New("Invalid Key. It must not be nil.")
 	}
 
-	decryptor, found := csp.Decryptors[reflect.TypeOf(k)]
-	if !found {
+	decryptor, ok := csp.Decryptors[reflect.TypeOf(k)]
+	if !ok {
 		return nil, errors.Errorf("Unsupported 'DecryptKey' provided [%v]", k)
 	}
 
@@ -306,9 +374,7 @@ func (csp *CSP) Decrypt(k bccsp.Key, ciphertext []byte, opts bccsp.DecrypterOpts
 	return
 }
 
-// AddWrapper binds the passed type to the passed wrapper.
-// Notice that that wrapper must be an instance of one of the following interfaces:
-// KeyGenerator, KeyDeriver, KeyImporter, Encryptor, Decryptor, Signer, Verifier, Hasher.
+// AddWrapper 根据反射获取的type绑定到相应的map，使NewGMCSP中代码看起来简洁些
 func (csp *CSP) AddWrapper(t reflect.Type, w interface{}) error {
 	if t == nil {
 		return errors.Errorf("type cannot be nil")

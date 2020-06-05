@@ -24,7 +24,7 @@ type Validator interface {
 	ProposeConfigUpdate(configtx *cb.Envelope) (*cb.ConfigEnvelope, error)
 
 	// ChannelID retrieves the channel ID associated with this manager
-	ChannelID() string
+	ChannelID() string //1.4.2中是chainID
 
 	// ConfigProto returns the current config as a proto
 	ConfigProto() *cb.Config

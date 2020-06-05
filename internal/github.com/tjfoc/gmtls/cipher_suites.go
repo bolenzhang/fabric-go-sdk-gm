@@ -25,7 +25,7 @@ import (
 	"crypto/sha256"
 	"hash"
 
-	"github.com/tjfoc/gmsm/sm2"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )

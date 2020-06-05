@@ -9,17 +9,21 @@ package msp
 import (
 	"crypto"
 	"crypto/rand"
+	//"crypto/x509"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 	"encoding/hex"
+
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+
 	"encoding/pem"
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/flogging"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
-	"github.com/hyperledger/fabric/protos/msp"
+	"github.com/hyperledger/fabric-protos-go/msp"
+	bccsp "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge"
+	flogging "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
+	logging "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
 	"github.com/pkg/errors"
-	"go.uber.org/zap/zapcore"
 )
 
 var mspIdentityLogger = flogging.MustGetLogger("msp.identity")
@@ -29,18 +33,17 @@ type identity struct {
 	id *IdentityIdentifier
 
 	// cert contains the x.509 certificate that signs the public key of this instance
-	// cert *x509.Certificate
-	cert *sm2.Certificate
+	cert *x509.Certificate
 
 	// this is the public key of this instance
-	pk bccsp.Key
+	pk core.Key
 
 	// reference to the MSP that "owns" this identity
 	msp *bccspmsp
 }
 
-func newIdentity(cert *sm2.Certificate, pk bccsp.Key, msp *bccspmsp) (Identity, error) {
-	if mspIdentityLogger.IsEnabledFor(zapcore.DebugLevel) {
+func newIdentity(cert *x509.Certificate, pk core.Key, msp *bccspmsp) (Identity, error) {
+	if mspIdentityLogger.IsEnabledFor(logging.DEBUG) {
 		mspIdentityLogger.Debugf("Creating identity instance for cert %s", certToPEM(cert))
 	}
 
@@ -124,21 +127,6 @@ func (id *identity) Anonymous() bool {
 	return false
 }
 
-// NewSerializedIdentity returns a serialized identity
-// having as content the passed mspID and x509 certificate in PEM format.
-// This method does not check the validity of certificate nor
-// any consistency of the mspID with it.
-func NewSerializedIdentity(mspID string, certPEM []byte) ([]byte, error) {
-	// We serialize identities by prepending the MSPID
-	// and appending the x509 cert in PEM format
-	sId := &msp.SerializedIdentity{Mspid: mspID, IdBytes: certPEM}
-	raw, err := proto.Marshal(sId)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed serializing identity [%s][%X]", mspID, certPEM)
-	}
-	return raw, nil
-}
-
 // Verify checks against a signature and a message
 // to determine whether this identity produced the
 // signature; it returns nil if so or an error otherwise
@@ -156,7 +144,7 @@ func (id *identity) Verify(msg []byte, sig []byte) error {
 		return errors.WithMessage(err, "failed computing digest")
 	}
 
-	if mspIdentityLogger.IsEnabledFor(zapcore.DebugLevel) {
+	if mspIdentityLogger.IsEnabledFor(logging.DEBUG) {
 		mspIdentityLogger.Debugf("Verify: digest = %s", hex.Dump(digest))
 		mspIdentityLogger.Debugf("Verify: sig = %s", hex.Dump(sig))
 	}
@@ -191,7 +179,7 @@ func (id *identity) Serialize() ([]byte, error) {
 	return idBytes, nil
 }
 
-func (id *identity) getHashOpt(hashFamily string) (bccsp.HashOpts, error) {
+func (id *identity) getHashOpt(hashFamily string) (core.HashOpts, error) {
 	switch hashFamily {
 	case bccsp.SHA2:
 		return bccsp.GetHashOpt(bccsp.SHA256)
@@ -209,7 +197,7 @@ type signingidentity struct {
 	signer crypto.Signer
 }
 
-func newSigningIdentity(cert *sm2.Certificate, pk bccsp.Key, signer crypto.Signer, msp *bccspmsp) (SigningIdentity, error) {
+func newSigningIdentity(cert *x509.Certificate, pk core.Key, signer crypto.Signer, msp *bccspmsp) (SigningIdentity, error) {
 	//mspIdentityLogger.Infof("Creating signing identity instance for ID %s", id)
 	mspId, err := newIdentity(cert, pk, msp)
 	if err != nil {

@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"crypto/ecdsa"
 )
 
 type validity struct {
@@ -62,10 +63,6 @@ type tbsCertificate struct {
 }
 
 func isECDSASignedCert(cert *sm2.Certificate) bool {
-	//return cert.SignatureAlgorithm == x509.ECDSAWithSHA1 ||
-	//	cert.SignatureAlgorithm == x509.ECDSAWithSHA256 ||
-	//	cert.SignatureAlgorithm == x509.ECDSAWithSHA384 ||
-	//	cert.SignatureAlgorithm == x509.ECDSAWithSHA512
 	return cert.SignatureAlgorithm == sm2.ECDSAWithSHA1 ||
 		cert.SignatureAlgorithm == sm2.ECDSAWithSHA256 ||
 		cert.SignatureAlgorithm == sm2.ECDSAWithSHA384 ||
@@ -84,7 +81,8 @@ func sanitizeECDSASignedCert(cert *sm2.Certificate, parentCert *sm2.Certificate)
 		return nil, errors.New("parent certificate must be different from nil")
 	}
 
-	expectedSig, err := gm.SignatureToLowS(parentCert.PublicKey.(*sm2.PublicKey), cert.Signature)
+	// expectedSig, err := utils.SignatureToLowS(parentCert.PublicKey.(*ecdsa.PublicKey), cert.Signature)
+	expectedSig, err := gm.SignatureToLowS(parentCert.PublicKey.(*ecdsa.PublicKey), cert.Signature)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +97,8 @@ func sanitizeECDSASignedCert(cert *sm2.Certificate, parentCert *sm2.Certificate)
 	//    the lower level interface that represent an x509 certificate
 	//    encoding
 	var newCert certificate
-	newCert, err = certFromX509Cert(cert)
+	// newCert, err = certFromX509Cert(cert)
+	newCert, err = certFromSM2Cert(cert)
 	if err != nil {
 		return nil, err
 	}
@@ -115,10 +114,20 @@ func sanitizeECDSASignedCert(cert *sm2.Certificate, parentCert *sm2.Certificate)
 	}
 
 	// 4. parse newRaw to get an x509 certificate
+	// return x509.ParseCertificate(newRaw)
 	return sm2.ParseCertificate(newRaw)
 }
 
-func certFromX509Cert(cert *sm2.Certificate) (certificate, error) {
+// func certFromX509Cert(cert *x509.Certificate) (certificate, error) {
+// 	var newCert certificate
+// 	_, err := asn1.Unmarshal(cert.Raw, &newCert)
+// 	if err != nil {
+// 		return certificate{}, err
+// 	}
+// 	return newCert, nil
+// }
+
+func certFromSM2Cert(cert *sm2.Certificate) (certificate, error) {
 	var newCert certificate
 	_, err := asn1.Unmarshal(cert.Raw, &newCert)
 	if err != nil {
@@ -141,10 +150,12 @@ func (c certificate) String() string {
 	return string(b)
 }
 
-// certToPEM converts the given sm2.Certificate to a PEM
+// certToPEM converts the given x509.Certificate to a PEM
 // encoded string
+// func certToPEM(certificate *x509.Certificate) string {
 func certToPEM(certificate *sm2.Certificate) string {
-	cert, err := certFromX509Cert(certificate)
+	// cert, err := certFromX509Cert(certificate)
+	cert, err := certFromSM2Cert(certificate)
 	if err != nil {
 		mspIdentityLogger.Warning("Failed converting certificate to asn1", err)
 		return ""
