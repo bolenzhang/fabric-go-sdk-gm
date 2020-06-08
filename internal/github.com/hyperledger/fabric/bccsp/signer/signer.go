@@ -22,24 +22,26 @@ package signer
 import (
 	"crypto"
 
-	"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
-
+	//"github.com/hyperledger/fabric-sdk-go/api/apicryptosuite"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"io"
 
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp/utils"
 	"github.com/pkg/errors"
+
 )
 
 // bccspCryptoSigner is the BCCSP-based implementation of a crypto.Signer
 type bccspCryptoSigner struct {
-	csp apicryptosuite.CryptoSuite
-	key apicryptosuite.Key
+	csp core.CryptoSuite
+	key core.Key
 	pk  interface{}
 }
 
 // New returns a new BCCSP-based crypto.Signer
 // for the given BCCSP instance and key.
-func New(csp apicryptosuite.CryptoSuite, key apicryptosuite.Key) (crypto.Signer, error) {
+//TODO(liyong): to ensure here. (csp bccsp.BCSSP, key bccsp.key). cryptoSuite is a wrapper of bccsp?
+func New(csp core.CryptoSuite, key core.Key) (crypto.Signer, error) {
 	// Validate arguments
 	if csp == nil {
 		return nil, errors.New("bccsp instance must be different from nil.")

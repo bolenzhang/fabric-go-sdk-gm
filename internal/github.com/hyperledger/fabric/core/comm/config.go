@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package comm
 
 import (
-	"github.com/tjfoc/gmsm/sm2"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
 	"time"
 
@@ -59,9 +59,10 @@ type ServerConfig struct {
 	// RPCs.  They are executed in order.
 	UnaryInterceptors []grpc.UnaryServerInterceptor
 	// Logger specifies the logger the server will use
-	Logger *flogging.FabricLogger
-	// ServerStatsHandler should be set if metrics on connections are to be reported.
-	ServerStatsHandler *ServerStatsHandler
+	Logger *flogging.Logger
+	MetricsProvider metrics.Provider
+	// HealthCheckEnabled enables the gRPC Health Checking Protocol for the server
+	HealthCheckEnabled bool
 }
 
 // ClientConfig defines the parameters for configuring a GRPCClient instance
