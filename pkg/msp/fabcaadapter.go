@@ -151,7 +151,6 @@ func (c *fabricCAAdapter) Revoke(key core.Key, cert []byte, request *api.Revocat
 		Serial: request.Serial,
 		AKI:    request.AKI,
 		Reason: request.Reason,
-		GenCRL: request.GenCRL,
 	}
 
 	registrar, err := c.newIdentity(key, cert)
