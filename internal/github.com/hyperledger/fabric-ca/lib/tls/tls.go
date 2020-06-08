@@ -22,7 +22,8 @@ package tls
 
 import (
 	"crypto/x509"
-	tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
+	//tls "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmtls"
+	"crypto/tls"
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
@@ -63,6 +64,10 @@ func GetClientTLSConfig(cfg *ClientTLSConfig, csp core.CryptoSuite) (*tls.Config
 	if csp == nil {
 		csp = factory.GetDefault()
 	}
+
+	log.Debugf("CA Files: %+v\n", cfg.CertFiles)
+	log.Debugf("Client Cert File: %s\n", cfg.Client.CertFile)
+	log.Debugf("Client Key File: %s\n", cfg.Client.KeyFile)
 
 	if cfg.Client.CertFile != nil {
 		err := checkCertDates(cfg.Client.CertFile)

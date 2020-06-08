@@ -83,9 +83,9 @@ func (cp *ChannelProvider) HasCapability(capability string) bool {
 // MSPVersion returns the level of MSP support required by this channel.
 func (cp *ChannelProvider) MSPVersion() msp.MSPVersion {
 	switch {
-	case cp.v143 || cp.v20:
-		return msp.MSPv1_4_3
-	case cp.v13 || cp.v142:
+	//case cp.v143 || cp.v20:
+	//	return msp.MSPv1_4_3
+	case cp.v13 || cp.v142 || cp.v20:
 		return msp.MSPv1_3
 	case cp.v11:
 		return msp.MSPv1_1
@@ -96,10 +96,10 @@ func (cp *ChannelProvider) MSPVersion() msp.MSPVersion {
 
 // ConsensusTypeMigration return true if consensus-type migration is supported and permitted in both orderer and peer.
 func (cp *ChannelProvider) ConsensusTypeMigration() bool {
-	return cp.v142 || cp.v143 || cp.v20
+	return cp.v142 || cp.v20
 }
 
 // OrgSpecificOrdererEndpoints allows for individual orderer orgs to specify their external addresses for their OSNs.
 func (cp *ChannelProvider) OrgSpecificOrdererEndpoints() bool {
-	return cp.v142 || cp.v143 || cp.v20
+	return cp.v142 || cp.v20
 }

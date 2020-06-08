@@ -20,7 +20,8 @@ import (
 	"encoding/asn1"
 	"encoding/json"
 	"fmt"
-	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
+	//x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
+	"crypto/x509"
 
 	"github.com/pkg/errors"
 )
