@@ -134,7 +134,7 @@ func signedByAnyOfGivenRole(role msp.MSPRole_MSPRoleType, ids []string) *cb.Sign
 	for i, id := range ids {
 		principals[i] = &msp.MSPPrincipal{
 			PrincipalClassification: msp.MSPPrincipal_ROLE,
-			Principal: protoutil.MarshalOrPanic(&msp.MSPRole{Role: role, MspIdentifier: id})}
+			Principal:               protoutil.MarshalOrPanic(&msp.MSPRole{Role: role, MspIdentifier: id})}
 		sigspolicy[i] = SignedBy(int32(i))
 	}
 

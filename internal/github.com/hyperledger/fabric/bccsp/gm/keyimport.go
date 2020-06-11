@@ -106,7 +106,7 @@ func (*sm2PublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bccsp.
 		return nil, fmt.Errorf("Failed converting to SM2 public key [%s]", err)
 	}
 
-	return &sm2PublicKey{sm2PubKey}, nil  // 问题所在？
+	return &sm2PublicKey{sm2PubKey}, nil // 问题所在？
 }
 
 type ecdsaPKIXPublicKeyImportOptsKeyImporter struct{}

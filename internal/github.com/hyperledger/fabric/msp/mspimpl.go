@@ -9,10 +9,10 @@ package msp
 import (
 	"bytes"
 	//"crypto/x509"
-	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 	"crypto/x509/pkix"
 	"encoding/hex"
 	"encoding/pem"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 
 	"github.com/golang/protobuf/proto"
 	m "github.com/hyperledger/fabric-protos-go/msp"

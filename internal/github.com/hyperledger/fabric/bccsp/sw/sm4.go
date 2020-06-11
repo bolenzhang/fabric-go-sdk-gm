@@ -20,6 +20,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm4"
 )
+
 // AESCBCPKCS7Encrypt combines CBC encryption and PKCS7 padding
 func SM4Encrypt(key, src []byte) ([]byte, error) {
 	// // First pad

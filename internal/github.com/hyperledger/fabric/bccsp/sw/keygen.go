@@ -26,11 +26,10 @@ import (
 	"crypto/rand"
 	"fmt"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"crypto/rsa"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 )
-
 
 type ecdsaKeyGenerator struct {
 	curve elliptic.Curve

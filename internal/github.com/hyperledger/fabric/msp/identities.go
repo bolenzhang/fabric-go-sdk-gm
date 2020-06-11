@@ -10,8 +10,8 @@ import (
 	"crypto"
 	"crypto/rand"
 	//"crypto/x509"
-	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 	"encoding/hex"
+	x509 "github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 

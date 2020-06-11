@@ -1,12 +1,9 @@
 /*
 Copyright IBM Corp. 2016 All Rights Reserved.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
                  http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,6 +60,20 @@ type ReenrollmentRequestNet struct {
 // A RevocationRequest can only be performed by a user with the "hf.Revoker" attribute.
 type RevocationRequestNet struct {
 	RevocationRequest
+}
+
+// GetTCertBatchRequestNet is a network request for a batch of transaction certificates
+type GetTCertBatchRequestNet struct {
+	GetTCertBatchRequest
+	// KeySigs is an optional array of public keys and corresponding signatures.
+	// If not set, the server generates it's own keys based on a key derivation function
+	// which cryptographically relates the TCerts to an ECert.
+	KeySigs []KeySig `json:"key_sigs,omitempty"`
+}
+
+// GetTCertBatchResponseNet is the network response for a batch of transaction certificates
+type GetTCertBatchResponseNet struct {
+	GetTCertBatchResponse
 }
 
 // AddIdentityRequestNet is a network request for adding a new identity

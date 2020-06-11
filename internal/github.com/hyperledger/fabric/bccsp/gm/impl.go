@@ -21,11 +21,11 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	//"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/common/flogging"
-	flogging "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
-	"github.com/pkg/errors"
-	"crypto/sha512"
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm3"
 	"crypto/sha256"
+	"crypto/sha512"
+	flogging "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/logbridge"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm3"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -132,7 +132,6 @@ func NewWithParams(securityLevel int, hashFamily string, keyStore bccsp.KeyStore
 	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SM4KeyGenOpts{}), &sm4KeyGenerator{length: 32})
 
 	// Set the key generators
-
 
 	// Set the key importers
 	gmcsp.AddWrapper(reflect.TypeOf(&bccsp.SM4ImportKeyOpts{}), &sm4ImportKeyOptsKeyImporter{})
@@ -258,7 +257,7 @@ func (csp *CSP) Hash(msg []byte, opts bccsp.HashOpts) (digest []byte, err error)
 		return nil, errors.New("Invalid opts. It must not be nil.")
 	}
 
-	hasher, ok:= csp.Hashers[reflect.TypeOf(opts)]
+	hasher, ok := csp.Hashers[reflect.TypeOf(opts)]
 	if !ok {
 		return nil, errors.Errorf("Unsupported 'HashOpt' provided [%v]", opts)
 	}
@@ -270,6 +269,7 @@ func (csp *CSP) Hash(msg []byte, opts bccsp.HashOpts) (digest []byte, err error)
 
 	return
 }
+
 // 获取hash
 func (csp *CSP) GetHash(opts bccsp.HashOpts) (h hash.Hash, err error) {
 	// Validate arguments
@@ -302,7 +302,7 @@ func (csp *CSP) Sign(k bccsp.Key, digest []byte, opts bccsp.SignerOpts) (signatu
 
 	signer, ok := csp.Signers[reflect.TypeOf(k)]
 	if !ok {
-		return nil, errors.Errorf("Unsupported 'SignKey' provided [%v]", k )
+		return nil, errors.Errorf("Unsupported 'SignKey' provided [%v]", k)
 	}
 
 	signature, err = signer.Sign(k, digest, opts)

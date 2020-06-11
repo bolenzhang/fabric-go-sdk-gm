@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"time"
 
+	"fmt"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/core/operations"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	coptions "github.com/hyperledger/fabric-sdk-go/pkg/common/options"
@@ -367,6 +368,7 @@ func (sdk *FabricSDK) Context(options ...ContextOption) contextApi.ClientProvide
 	clientProvider := func() (contextApi.Client, error) {
 		identity, err := sdk.newIdentity(options...)
 		if err == ErrAnonymousIdentity {
+			fmt.Println("err == ErrAnonymousIdentity")
 			identity = nil
 			err = nil
 		}

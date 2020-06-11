@@ -24,10 +24,9 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 	"math/big"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"crypto/ecdsa"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 )
-
 
 func signSM2(k *sm2.PrivateKey, digest []byte, opts bccsp.SignerOpts) ([]byte, error) {
 	return k.Sign(rand.Reader, digest, opts)
@@ -80,8 +79,8 @@ func (v *ecdsaPrivateKeyVerifier) Verify(k bccsp.Key, signature, digest []byte, 
 	publicKey := k.(*ecdsaPrivateKey).privKey.PublicKey
 	sm2pk := sm2.PublicKey{
 		Curve: publicKey.Curve,
-		X: publicKey.X,
-		Y: publicKey.Y,
+		X:     publicKey.X,
+		Y:     publicKey.Y,
 	}
 	return verifySM2(&sm2pk, signature, digest, opts)
 }
@@ -92,8 +91,8 @@ func (v *ecdsaPublicKeyKeyVerifier) Verify(k bccsp.Key, signature, digest []byte
 	publicKey := k.(*ecdsaPublicKey).pubKey
 	sm2pk := sm2.PublicKey{
 		Curve: publicKey.Curve,
-		X: publicKey.X,
-		Y: publicKey.Y,
+		X:     publicKey.X,
+		Y:     publicKey.Y,
 	}
 	return verifySM2(&sm2pk, signature, digest, opts)
 }
@@ -112,7 +111,7 @@ var (
 		elliptic.P256(): new(big.Int).Rsh(elliptic.P256().Params().N, 1),
 		elliptic.P384(): new(big.Int).Rsh(elliptic.P384().Params().N, 1),
 		elliptic.P521(): new(big.Int).Rsh(elliptic.P521().Params().N, 1),
-		sm2.P256Sm2(): new(big.Int).Rsh(sm2.P256Sm2().Params().N, 1),
+		sm2.P256Sm2():   new(big.Int).Rsh(sm2.P256Sm2().Params().N, 1),
 	}
 )
 
@@ -170,7 +169,7 @@ func ToLowS(k *ecdsa.PublicKey, s *big.Int) (*big.Int, bool, error) {
 		return nil, false, err
 	}
 
-	if !lowS && k.Curve != sm2.P256Sm2(){
+	if !lowS && k.Curve != sm2.P256Sm2() {
 		// Set s to N - s that will be then in the lower part of signature space
 		// less or equal to half order
 		s.Sub(k.Params().N, s)

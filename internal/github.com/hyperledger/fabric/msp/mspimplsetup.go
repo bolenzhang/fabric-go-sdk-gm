@@ -18,6 +18,7 @@ import (
 	bccsp "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/sdkpatch/cryptosuitebridge"
 	"github.com/pkg/errors"
 )
+
 func (msp *bccspmsp) getCertifiersIdentifier(certRaw []byte) ([]byte, error) {
 	// 1. check that certificate is registered in msp.rootCerts or msp.intermediateCerts
 	cert, err := msp.getCertFromPem(certRaw)

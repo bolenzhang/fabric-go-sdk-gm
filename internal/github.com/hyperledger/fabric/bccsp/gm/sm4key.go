@@ -18,8 +18,8 @@ package gm
 import (
 	"errors"
 
-	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"crypto/sha256"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 )
 
 type sm4PrivateKey struct {

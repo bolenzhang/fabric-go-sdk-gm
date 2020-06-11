@@ -21,8 +21,8 @@ import (
 
 	"math/big"
 
-	"fmt"
 	"errors"
+	"fmt"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 )

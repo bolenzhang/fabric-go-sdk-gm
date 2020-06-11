@@ -17,7 +17,6 @@ package sm2
 
 // reference to ecdsa
 import (
-	"fmt"
 	"bytes"
 	"crypto"
 	"crypto/aes"
@@ -29,6 +28,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"math/big"
 
@@ -164,7 +164,7 @@ func GenerateKey() (*PrivateKey, error) {
 var errZeroParam = errors.New("zero parameter")
 
 func Sign(priv *PrivateKey, hash []byte) (r, s *big.Int, err error) {
-	fmt.Printf("[temp test] sdk sm2 sign %s",hex.Dump(hash))
+	fmt.Printf("[temp test] sdk sm2 sign %s", hex.Dump(hash))
 	entropylen := (priv.Curve.Params().BitSize + 7) / 16
 	if entropylen > 32 {
 		entropylen = 32

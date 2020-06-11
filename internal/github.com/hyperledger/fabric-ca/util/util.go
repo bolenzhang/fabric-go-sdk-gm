@@ -33,8 +33,8 @@ import (
 	mrand "math/rand"
 
 	factory "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/cryptosuitebridge"
+	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-
 	"net/http"
 	"os"
 	"path"
@@ -45,6 +45,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go-common/library/log"
 	"golang.org/x/crypto/ocsp"
 )
 
@@ -149,8 +150,22 @@ func CreateToken(csp core.CryptoSuite, cert []byte, key core.Key, method, uri st
 
 	var token string
 
+	//The RSA Key Gen is commented right now as there is bccsp does
 	switch publicKey.(type) {
+	/*
+		case *rsa.PublicKey:
+			token, err = GenRSAToken(csp, cert, key, body)
+			if err != nil {
+				return "", err
+			}
+	*/
 	case *ecdsa.PublicKey:
+		token, err = GenECDSAToken(csp, cert, key, method, uri, body, fabCACompatibilityMode)
+		if err != nil {
+			return "", err
+		}
+	case *sm2.PublicKey:
+		log.Info("[CreateToken] sm2.PublicKey")
 		token, err = GenECDSAToken(csp, cert, key, method, uri, body, fabCACompatibilityMode)
 		if err != nil {
 			return "", err
@@ -158,6 +173,31 @@ func CreateToken(csp core.CryptoSuite, cert []byte, key core.Key, method, uri st
 	}
 	return token, nil
 }
+
+//GenRSAToken signs the http body and cert with RSA using RSA private key
+// @csp : BCCSP instance
+/*
+func GenRSAToken(csp core.CryptoSuite, cert []byte, key []byte, body []byte) (string, error) {
+	privKey, err := GetRSAPrivateKey(key)
+	if err != nil {
+		return "", err
+	}
+	b64body := B64Encode(body)
+	b64cert := B64Encode(cert)
+	bodyAndcert := b64body + "." + b64cert
+	hash := sha512.New384()
+	hash.Write([]byte(bodyAndcert))
+	h := hash.Sum(nil)
+	RSAsignature, err := rsa.SignPKCS1v15(rand.Reader, privKey, crypto.SHA384, h[:])
+	if err != nil {
+		return "", errors.Wrap(err, "Failed to rsa.SignPKCS1v15")
+	}
+	b64sig := B64Encode(RSAsignature)
+	token := b64cert + "." + b64sig
+
+	return  token, nil
+}
+*/
 
 //GenECDSAToken signs the http body and cert with ECDSA using EC private key
 func GenECDSAToken(csp core.CryptoSuite, cert []byte, key core.Key, method, uri string, body []byte, fabCACompatibilityMode bool) (string, error) {
@@ -227,9 +267,14 @@ func GetX509CertificateFromPEM(cert []byte) (*x509.Certificate, error) {
 	if block == nil {
 		return nil, errors.New("Failed to PEM decode certificate")
 	}
-	x509Cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error parsing certificate")
+	//x509Cert, err := x509.ParseCertificate(block.Bytes)
+	//if err != nil {
+	//	return nil, errors.Wrap(err, "Error parsing certificate")
+	//}
+	var x509Cert *x509.Certificate
+	sm2x509Cert, err := sm2.ParseCertificate(block.Bytes)
+	if err == nil {
+		x509Cert = ParseSm2Certificate2X509(sm2x509Cert)
 	}
 	return x509Cert, nil
 }
@@ -320,4 +365,140 @@ func GetMaskedURL(url string) string {
 		url = url[:matchIdxs[0]] + matchStr + url[matchIdxs[1]:len(url)]
 	}
 	return url
+}
+
+func ParseSm2Certificate2X509(sm2Cert *sm2.Certificate) *x509.Certificate {
+	x509cert := &x509.Certificate{
+		Raw:                     sm2Cert.Raw,
+		RawTBSCertificate:       sm2Cert.RawTBSCertificate,
+		RawSubjectPublicKeyInfo: sm2Cert.RawSubjectPublicKeyInfo,
+		RawSubject:              sm2Cert.RawSubject,
+		RawIssuer:               sm2Cert.RawIssuer,
+
+		Signature:          sm2Cert.Signature,
+		SignatureAlgorithm: x509.SignatureAlgorithm(sm2Cert.SignatureAlgorithm),
+
+		PublicKeyAlgorithm: x509.PublicKeyAlgorithm(sm2Cert.PublicKeyAlgorithm),
+		PublicKey:          sm2Cert.PublicKey,
+
+		Version:      sm2Cert.Version,
+		SerialNumber: sm2Cert.SerialNumber,
+		Issuer:       sm2Cert.Issuer,
+		Subject:      sm2Cert.Subject,
+		NotBefore:    sm2Cert.NotBefore,
+		NotAfter:     sm2Cert.NotAfter,
+		KeyUsage:     x509.KeyUsage(sm2Cert.KeyUsage),
+
+		Extensions: sm2Cert.Extensions,
+
+		ExtraExtensions: sm2Cert.ExtraExtensions,
+
+		UnhandledCriticalExtensions: sm2Cert.UnhandledCriticalExtensions,
+
+		//ExtKeyUsage:	[]x509.ExtKeyUsage(sm2Cert.ExtKeyUsage) ,
+		UnknownExtKeyUsage: sm2Cert.UnknownExtKeyUsage,
+
+		BasicConstraintsValid: sm2Cert.BasicConstraintsValid,
+		IsCA:                  sm2Cert.IsCA,
+		MaxPathLen:            sm2Cert.MaxPathLen,
+		// MaxPathLenZero indicates that BasicConstraintsValid==true and
+		// MaxPathLen==0 should be interpreted as an actual maximum path length
+		// of zero. Otherwise, that combination is interpreted as MaxPathLen
+		// not being set.
+		MaxPathLenZero: sm2Cert.MaxPathLenZero,
+
+		SubjectKeyId:   sm2Cert.SubjectKeyId,
+		AuthorityKeyId: sm2Cert.AuthorityKeyId,
+
+		// RFC 5280, 4.2.2.1 (Authority Information Access)
+		OCSPServer:            sm2Cert.OCSPServer,
+		IssuingCertificateURL: sm2Cert.IssuingCertificateURL,
+
+		// Subject Alternate Name values
+		DNSNames:       sm2Cert.DNSNames,
+		EmailAddresses: sm2Cert.EmailAddresses,
+		IPAddresses:    sm2Cert.IPAddresses,
+
+		// Name constraints
+		PermittedDNSDomainsCritical: sm2Cert.PermittedDNSDomainsCritical,
+		PermittedDNSDomains:         sm2Cert.PermittedDNSDomains,
+
+		// CRL Distribution Points
+		CRLDistributionPoints: sm2Cert.CRLDistributionPoints,
+
+		PolicyIdentifiers: sm2Cert.PolicyIdentifiers,
+	}
+	for _, val := range sm2Cert.ExtKeyUsage {
+		x509cert.ExtKeyUsage = append(x509cert.ExtKeyUsage, x509.ExtKeyUsage(val))
+	}
+
+	return x509cert
+}
+
+func ParseX509Certificate2Sm2(x509Cert *x509.Certificate) *sm2.Certificate {
+	sm2cert := &sm2.Certificate{
+		Raw:                     x509Cert.Raw,
+		RawTBSCertificate:       x509Cert.RawTBSCertificate,
+		RawSubjectPublicKeyInfo: x509Cert.RawSubjectPublicKeyInfo,
+		RawSubject:              x509Cert.RawSubject,
+		RawIssuer:               x509Cert.RawIssuer,
+
+		Signature:          x509Cert.Signature,
+		SignatureAlgorithm: sm2.SignatureAlgorithm(x509Cert.SignatureAlgorithm),
+
+		PublicKeyAlgorithm: sm2.PublicKeyAlgorithm(x509Cert.PublicKeyAlgorithm),
+		PublicKey:          x509Cert.PublicKey,
+
+		Version:      x509Cert.Version,
+		SerialNumber: x509Cert.SerialNumber,
+		Issuer:       x509Cert.Issuer,
+		Subject:      x509Cert.Subject,
+		NotBefore:    x509Cert.NotBefore,
+		NotAfter:     x509Cert.NotAfter,
+		KeyUsage:     sm2.KeyUsage(x509Cert.KeyUsage),
+
+		Extensions: x509Cert.Extensions,
+
+		ExtraExtensions: x509Cert.ExtraExtensions,
+
+		UnhandledCriticalExtensions: x509Cert.UnhandledCriticalExtensions,
+
+		//ExtKeyUsage:	[]x509.ExtKeyUsage(x509Cert.ExtKeyUsage) ,
+		UnknownExtKeyUsage: x509Cert.UnknownExtKeyUsage,
+
+		BasicConstraintsValid: x509Cert.BasicConstraintsValid,
+		IsCA:                  x509Cert.IsCA,
+		MaxPathLen:            x509Cert.MaxPathLen,
+		// MaxPathLenZero indicates that BasicConstraintsValid==true and
+		// MaxPathLen==0 should be interpreted as an actual maximum path length
+		// of zero. Otherwise, that combination is interpreted as MaxPathLen
+		// not being set.
+		MaxPathLenZero: x509Cert.MaxPathLenZero,
+
+		SubjectKeyId:   x509Cert.SubjectKeyId,
+		AuthorityKeyId: x509Cert.AuthorityKeyId,
+
+		// RFC 5280, 4.2.2.1 (Authority Information Access)
+		OCSPServer:            x509Cert.OCSPServer,
+		IssuingCertificateURL: x509Cert.IssuingCertificateURL,
+
+		// Subject Alternate Name values
+		DNSNames:       x509Cert.DNSNames,
+		EmailAddresses: x509Cert.EmailAddresses,
+		IPAddresses:    x509Cert.IPAddresses,
+
+		// Name constraints
+		PermittedDNSDomainsCritical: x509Cert.PermittedDNSDomainsCritical,
+		PermittedDNSDomains:         x509Cert.PermittedDNSDomains,
+
+		// CRL Distribution Points
+		CRLDistributionPoints: x509Cert.CRLDistributionPoints,
+
+		PolicyIdentifiers: x509Cert.PolicyIdentifiers,
+	}
+	for _, val := range x509Cert.ExtKeyUsage {
+		sm2cert.ExtKeyUsage = append(sm2cert.ExtKeyUsage, sm2.ExtKeyUsage(val))
+	}
+
+	return sm2cert
 }

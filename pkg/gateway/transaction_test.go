@@ -13,7 +13,7 @@ import (
 func TestTransactionOptions(t *testing.T) {
 	transient := make(map[string][]byte)
 	transient["price"] = []byte("8500")
-	
+
 	c := mockChannelProvider("mychannel")
 
 	gw := &Gateway{}
@@ -27,7 +27,7 @@ func TestTransactionOptions(t *testing.T) {
 	contr := nw.GetContract("contract1")
 
 	txn, err := contr.CreateTransaction(
-		"txn1", 
+		"txn1",
 		WithTransient(transient),
 		WithEndorsingPeers("peer1"),
 	)

@@ -16,11 +16,12 @@ import (
 	"fmt"
 	"reflect"
 
+	"crypto/rsa"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/bccsp/utils"
-	"crypto/rsa"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm2"
 )
+
 type aes256ImportKeyOptsKeyImporter struct{}
 
 func (*aes256ImportKeyOptsKeyImporter) KeyImport(raw interface{}, opts bccsp.KeyImportOpts) (bccsp.Key, error) {

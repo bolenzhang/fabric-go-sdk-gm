@@ -27,8 +27,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/pkg/errors"
 	"crypto/ecdsa"
+	"github.com/pkg/errors"
 )
 
 type validity struct {

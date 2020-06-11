@@ -97,3 +97,16 @@ func GetX509PublicKeyImportOpts(ephemeral bool) core.KeyImportOpts {
 func GetECDSAPrivateKeyImportOpts(ephemeral bool) core.KeyImportOpts {
 	return &bccsp.ECDSAPrivateKeyImportOpts{Temporary: ephemeral}
 }
+
+//TODO: 注意此处！ 可能有循环引用，有则提出一个apicryptosuite
+func GetGMSM2KeyGenOpts(ephemeral bool) core.KeyImportOpts {
+	return &bccsp.SM2KeyGenOpts{ephemeral}
+}
+
+func GetGMSM2PrivateKeyImportOpts(ephemeral bool) core.KeyImportOpts {
+	return &bccsp.SM2PrivateKeyImportOpts{ephemeral}
+}
+
+func GetGMSM2PublicKeyImportOpts(ephemeral bool) core.KeyImportOpts {
+	return &bccsp.SM2PublicKeyImportOpts{ephemeral}
+}

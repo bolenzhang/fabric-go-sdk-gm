@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"hash"
 
-	"golang.org/x/crypto/sha3"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/tjfoc/gmsm/sm3"
+	"golang.org/x/crypto/sha3"
 )
 
 type config struct {
@@ -94,4 +94,3 @@ func (conf *config) setSecurityLevelGMSM3(level int) (err error) {
 	}
 	return
 }
-
