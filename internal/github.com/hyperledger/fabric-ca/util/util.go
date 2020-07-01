@@ -44,10 +44,9 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ocsp"
-	log "github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric-ca/sdkpatch/logbridge"
-
 )
 
 var (

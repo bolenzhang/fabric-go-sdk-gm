@@ -8,10 +8,6 @@ SPDX-License-Identifier: Apache-2.0
 package fabsdk
 
 import (
-	"math/rand"
-	"time"
-
-	"fmt"
 	"github.com/hyperledger/fabric-sdk-go/internal/github.com/hyperledger/fabric/core/operations"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/logging"
 	coptions "github.com/hyperledger/fabric-sdk-go/pkg/common/options"
@@ -29,6 +25,8 @@ import (
 	metricsCfg "github.com/hyperledger/fabric-sdk-go/pkg/fabsdk/metrics/cfg"
 	mspImpl "github.com/hyperledger/fabric-sdk-go/pkg/msp"
 	"github.com/pkg/errors"
+	"math/rand"
+	"time"
 )
 
 var logger = logging.NewLogger("fabsdk")
@@ -368,7 +366,6 @@ func (sdk *FabricSDK) Context(options ...ContextOption) contextApi.ClientProvide
 	clientProvider := func() (contextApi.Client, error) {
 		identity, err := sdk.newIdentity(options...)
 		if err == ErrAnonymousIdentity {
-			fmt.Println("err == ErrAnonymousIdentity")
 			identity = nil
 			err = nil
 		}

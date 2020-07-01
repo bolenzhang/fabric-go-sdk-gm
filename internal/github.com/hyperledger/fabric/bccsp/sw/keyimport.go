@@ -142,7 +142,7 @@ func (ki *x509PublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bc
 
 	switch pk.(type) {
 	case sm2.PublicKey:
-		fmt.Printf("bccsp gm keyimport pk is sm2.PublicKey")
+		fmt.Println("bccsp gm keyimport pk is sm2.PublicKey")
 		sm2PublicKey, ok := pk.(sm2.PublicKey)
 		if !ok {
 			return nil, errors.New("Parse interface []  to sm2 pk error")
@@ -156,7 +156,7 @@ func (ki *x509PublicKeyImportOptsKeyImporter) KeyImport(raw interface{}, opts bc
 			der,
 			&bccsp.SM2PublicKeyImportOpts{Temporary: opts.Ephemeral()})
 	case *sm2.PublicKey:
-		fmt.Printf("bccsp gm keyimport pk is *sm2.PublicKey\n")
+		fmt.Println("bccsp gm keyimport pk is *sm2.PublicKey")
 		sm2PublickKey, ok := pk.(*sm2.PublicKey)
 		if !ok {
 			return nil, errors.New("Parse interface []  to sm2 pk error")

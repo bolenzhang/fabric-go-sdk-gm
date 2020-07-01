@@ -7,7 +7,7 @@
 ARG BASE_GO_VERSION
 
 FROM golang:${BASE_GO_VERSION}
-
+ENV GOPROXY="https://goproxy.io"
 COPY test/fixtures/softhsm2/install-softhsm2.sh /tmp
 COPY scripts/_go/src/pkcs11helper /opt/workspace/pkcs11helper
 RUN bash /tmp/install-softhsm2.sh
